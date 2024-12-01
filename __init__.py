@@ -9,7 +9,9 @@ from .nodes.dictionary_nodes import (
     DictUpdate5,
     DictUpdate10,
     DictTemplate,
-    DictMultilineSelect
+    DictMultilineSelect,
+    DictJSONSave,
+    DictJSONLoad
 )
 
 from .nodes.dictionary_bus import (
@@ -33,7 +35,8 @@ NODE_CLASS_MAPPINGS = {
     "DictUpdate10": DictUpdate10,
     "DictTemplate": DictTemplate,
     "DictMultilineSelect": DictMultilineSelect,
-
+    "DictJSONSave":DictJSONSave,
+    "DictJSONLoad": DictJSONLoad,
     # Dictionary Bus Nodes
     "DictBus": DictBus,
     "DictBusUnpack": DictBusUnpack,
@@ -53,6 +56,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DictUpdate10": "Dictionary Update (10 pairs)",
     "DictTemplate": "Dictionary Template",
     "DictMultilineSelect": "Dictionary Multiline Select",
+    "DictJSONSave": "Dictionary Save as Json",
+    "DictJSONLoad": "Dictionary Load from Json",
 
     # Dictionary Bus Nodes
     "DictBus": "Dictionary Bus",
@@ -75,4 +80,4 @@ except ImportError:
     print("\033[33mWarning: ComfyUI server module not found, web services not initialized\033[0m")
 
 WEB_DIRECTORY = os.path.join(os.path.dirname(os.path.realpath(__file__)), "js")
-__version__ = "1.0.0"
+__version__ = "1.1.0"
