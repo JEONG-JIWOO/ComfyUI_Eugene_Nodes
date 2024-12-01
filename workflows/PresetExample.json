@@ -1,0 +1,280 @@
+{
+  "last_node_id": 33,
+  "last_link_id": 22,
+  "nodes": [
+    {
+      "id": 31,
+      "type": "ShowText|pysssss",
+      "pos": [
+        1360,
+        680
+      ],
+      "size": [
+        320,
+        120
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 20,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null,
+          "shape": 6
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        "",
+        "LoRA presets saved to: D:\\ComfyUI_windows_portable_dev\\ComfyUI_windows_portable\\ComfyUI\\models\\loras\\SD1.5\\Background\\Sci-fi_Enviroments_preset.json"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 32,
+      "type": "ShowText|pysssss",
+      "pos": [
+        1700,
+        1080
+      ],
+      "size": [
+        340,
+        80
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 22,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null,
+          "shape": 6
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        "",
+        "SD1.5\\Background\\Sci-fi_Enviroments_preset.json"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 33,
+      "type": "Text List to Text",
+      "pos": [
+        1700,
+        880
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text_list",
+          "type": "LIST",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            22
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Text List to Text"
+      },
+      "widgets_values": [
+        ", "
+      ]
+    },
+    {
+      "id": 28,
+      "type": "LoraPresetSelector",
+      "pos": [
+        1360,
+        880
+      ],
+      "size": [
+        315,
+        154
+      ],
+      "flags": {
+        "pinned": true
+      },
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "lora_list",
+          "type": "LIST",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "lora_list",
+          "type": "LIST",
+          "links": [
+            21
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraPresetSelector"
+      },
+      "widgets_values": [
+        "SD1.5",
+        "[SD 1.5] SciFi-Background",
+        1,
+        false,
+        false
+      ],
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 30,
+      "type": "LoraPresetSaver",
+      "pos": [
+        900,
+        680
+      ],
+      "size": [
+        400,
+        1054
+      ],
+      "flags": {
+        "pinned": true
+      },
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            20
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraPresetSaver"
+      },
+      "widgets_values": [
+        true,
+        "",
+        "SD1.5\\Background\\Sci-fi_Enviroments.safetensors",
+        "[SD 1.5] SciFi-Background",
+        1,
+        1,
+        "Sci-fi,background",
+        "medival",
+        "none",
+        "",
+        1,
+        1,
+        "",
+        "",
+        "none",
+        "",
+        1,
+        1,
+        "",
+        "",
+        "none",
+        "",
+        1,
+        1,
+        "",
+        "",
+        "none",
+        "",
+        1,
+        1,
+        "",
+        ""
+      ],
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    }
+  ],
+  "links": [
+    [
+      20,
+      30,
+      0,
+      31,
+      0,
+      "STRING"
+    ],
+    [
+      21,
+      28,
+      0,
+      33,
+      0,
+      "LIST"
+    ],
+    [
+      22,
+      33,
+      0,
+      32,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.4122927695244603,
+      "offset": [
+        -620.4279990781516,
+        -585.8965876407955
+      ]
+    }
+  },
+  "version": 0.4
+}
