@@ -1,5 +1,3 @@
-코드를 검토해보니 readme의 내용을 몇 가지 개선할 수 있을 것 같습니다. 다음과 같이 수정을 제안드립니다:
-
 # Eugene's ComfyUI Custom Utility Nodes
 
 ComfyUI 워크플로우를 최적화하고 관리하기 위한 유틸리티 노드 모음입니다.
@@ -46,3 +44,32 @@ Python Dictionary를 활용하여 프롬프트 텍스트를 체계적으로 관�
     - 새로운 key 문자열
   - 출력: 업데이트된 dictionary와 선택된 라인 번호
 
+### Dictionary Bus Nodes
+Dictionary와 모델 컴포넌트들(MODEL, CLIP, VAE 등)을 함께 관리하기 위한 유틸리티 노드들입니다.
+
+- DictBus
+  - Dictionary와 모델 컴포넌트들을 하나의 번들로 묶음
+  - 필수 입력: dictionary, model, clip, vae
+  - 선택 입력: image, latent
+  - 워크플로우에서 여러 컴포넌트를 단일 연결로 전달 가능
+
+- DictBusUnpack
+  - DictBus 번들을 개별 컴포넌트로 분리
+  - 모든 컴포넌트(dictionary, model, clip, vae, image, latent)를 개별적으로 출력
+  - 원본 bus도 함께 출력되어 계속 사용 가능
+
+- DictBusEdit
+  - DictBus 번들의 특정 컴포넌트만 선택적으로 수정
+  - 수정하지 않은 컴포넌트는 원본 값 유지
+  - 워크플로우 중간에 필요한 컴포넌트만 업데이트 가능
+
+## 디렉토리 구조
+```
+eugene_comfyui_nodes/
+├── __init__.py
+├── nodes/
+│   ├── __init__.py
+│   ├── dictionary_nodes.py
+│   └── dictionary_bus.py
+└── README.md
+```
