@@ -4,6 +4,7 @@ Provides nodes for saving and selecting LoRA presets
 """
 
 import folder_paths
+import os
 from .helper import LoraPresetHelper
 
 
@@ -22,7 +23,7 @@ class PresetSaver:
                        ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}) if param in ["strength", "clip_strength"] else
                        ("STRING", {"multiline": True, "default": ""}) if param in ["prompt_positive", "prompt_negative"] else
                        ("STRING", {"default": ""})
-                   for i in range(5) for param in ["name", "strength", "clip_strength", "prompt_positive", "prompt_negative", "nickname"]}
+                   for i in range(5) for param in ["name", "nickname", "strength", "clip_strength", "prompt_positive", "prompt_negative"]}
             }
         }
 

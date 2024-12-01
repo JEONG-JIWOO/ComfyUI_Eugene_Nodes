@@ -26,7 +26,13 @@ async def refresh_presets(request):
     """API endpoint to refresh preset data"""
     try:
         updated_data = PresetSelector.update_data()
-        return web.json_response(updated_data)
+        return web.json_response({
+            "status": "success",
+            "presets": [
+                {"path": path, "display_name": display_name}
+                for path, display_name in updated_data["presets"]
+            ]
+        })
     except Exception as e:
         print(f"Error in refresh_presets API: {e}")
         return web.json_response({"error": str(e)}, status=500)
@@ -34,5 +40,11 @@ async def refresh_presets(request):
 
 def setup_routes(server):
     """Setup web routes for LoRA preset management"""
-    server.app.router.add_post("/lora_presets", get_presets)
-    server.app.router.add_post("/lora_presets/refresh", refresh_presets)
+    # Add routes with correct API paths
+    for route in ["/lora_presets", "/api/lora_presets"]:  # Support both paths for compatibility
+        server.app.router.add_route("GET", route, get_presets)
+        server.app.router.add_route("POST", route, get_presets)
+
+    for route in ["/lora_presets/refresh", "/api/lora_presets/refresh"]:
+        server.app.router.add_route("GET", route, refresh_presets)
+        server.app.router.add_route("POST", route, refresh_presets)

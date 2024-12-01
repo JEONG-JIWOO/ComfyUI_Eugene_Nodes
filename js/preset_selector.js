@@ -5,7 +5,6 @@ app.registerExtension({
     name: "LoraPresetSelector.extension",
 
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
-        console.log("LoraPresetSelector extension Loaded");
         if (nodeType.comfyClass !== "LoraPresetSelector") {
             return;
         }
@@ -14,12 +13,19 @@ app.registerExtension({
 
         async function refreshPresets() {
             try {
-                const response = await api.fetchApi('/lora_presets/refresh', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+                const response = await api.fetchApi('/lora_presets/refresh');  // API path will be automatically prefixed
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
-                cachedPresets = data.presets || [];
+                if (!data || !data.presets) {
+                    throw new Error("Invalid response format");
+                }
+
+                cachedPresets = data.presets;
+                console.log("Refreshed presets:", cachedPresets);
                 return data;
             } catch (error) {
                 console.error("Failed to refresh presets:", error);
@@ -33,15 +39,20 @@ app.registerExtension({
             }
 
             try {
-                const response = await api.fetchApi('/lora_presets', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+                const response = await api.fetchApi('/lora_presets');  // API path will be automatically prefixed
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const data = await response.json();
                 console.log("Parsed API response:", data);
 
-                cachedPresets = data.presets || [];
+                if (!data || !data.presets) {
+                    throw new Error("Invalid response format");
+                }
+
+                cachedPresets = data.presets;
                 return cachedPresets;
             } catch (error) {
                 console.error("Failed to fetch presets:", error);
@@ -50,9 +61,14 @@ app.registerExtension({
         }
 
         function filterPresets(presets, subfolder) {
+            if (!Array.isArray(presets)) {
+                console.error("Invalid presets data:", presets);
+                return ["none"];
+            }
+
             console.log("Filtering for subfolder:", subfolder);
-            return presets.filter(preset => {
-                if (preset.path === "none") return true;
+            const filtered = presets.filter(preset => {
+                if (!preset || preset.path === "none") return true;
 
                 const normalizedPath = preset.path.replace(/\\/g, "/");
                 console.log("Checking path:", normalizedPath);
@@ -70,6 +86,9 @@ app.registerExtension({
                     return isInSubfolder;
                 }
             });
+
+            console.log("Filtered presets:", filtered);
+            return filtered;
         }
 
         const origOnNodeCreated = nodeType.prototype.onNodeCreated;
@@ -110,9 +129,7 @@ app.registerExtension({
                 console.log("All presets:", allPresets);
 
                 const filteredPresets = filterPresets(allPresets, subfolder);
-                console.log("Filtered presets:", filteredPresets);
-
-                const presetNames = filteredPresets.map(p => p.display_name);
+                const presetNames = filteredPresets.map(p => p.display_name || "none");
                 if (!presetNames.includes("none")) {
                     presetNames.unshift("none");
                 }
