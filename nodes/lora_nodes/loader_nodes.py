@@ -2,7 +2,7 @@
 LoRA Loader Nodes
 Provides nodes for loading and applying LoRA presets to models
 """
-
+import os
 from .helper import LoraPresetHelper
 
 
@@ -158,11 +158,12 @@ class ListBasedLoraLoader(AdvancedLoraLoader):
 
         # Handle input sources
         if dict_bus is not None:
-            dict_mb, model_mb, clip_mb, vae_mb, _, _, _ = dict_bus
+            dict_mb, model_mb, clip_mb, vae_mb, _, _, list_mb = dict_bus
             input_dictionary = input_dictionary or dict_mb
             model = model or model_mb
             clip = clip or clip_mb
             vae = vae or vae_mb
+            preset_list = preset_list or list_mb
 
         if basic_pipe is not None:
             model_bp, clip_bp, vae_bp, _, _ = basic_pipe

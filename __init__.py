@@ -42,8 +42,8 @@ NODE_CLASS_MAPPINGS = {
     # LoRA Nodes
     "LoraPresetSaver": PresetSaver,
     "LoraPresetSelector": PresetSelector,
-    "LoraLoader": AdvancedLoraLoader,
-    "LoraListLoader": ListBasedLoraLoader,
+    "LoraPresetLoader": AdvancedLoraLoader,
+    "LoraPresetListLoader": ListBasedLoraLoader,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -62,8 +62,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     # LoRA Nodes
     "LoraPresetSaver": "LoRA Preset Saver",
     "LoraPresetSelector": "LoRA Preset Selector",
-    "LoraLoader": "LoRA Advanced Loader",
-    "LoraListLoader": "LoRA List Loader"
+    "LoraPresetLoader": "LoRA Preset Loader & Encoder",
+    "LoraPresetListLoader": "LoRA Preset List Loader & Encoder"
 }
 
 # Get the web server instance from ComfyUI
