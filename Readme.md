@@ -5,7 +5,10 @@ ComfyUI 워크플로우를 최적화하고 관리하기 위한 유틸리티 노�
 ## Dictionary Based Prompt Management
 Python Dictionary를 활용하여 프롬프트 텍스트를 체계적으로 관리하고 재사용할 수 있는 유틸리티 노드들을 제공합니다.
 
-### Core Dictionary Nodes
+### Dictionary Nodes
+
+[DictionaryExample](./images/DictionaryExample.jpg)
+
 - DictUpdate1
   - 단일 key-value 쌍을 dictionary에 추가/업데이트
   - 입력 dictionary가 없는 경우 새로운 dictionary 생성
@@ -23,17 +26,13 @@ Python Dictionary를 활용하여 프롬프트 텍스트를 체계적으로 관�
   - 빈 key 또는 value는 자동으로 무시됨
   - 모든 필드는 선택적(optional)으로 사용 가능
 
-### Dictionary Utilities
 - DictTemplate
   - Dictionary의 값들을 템플릿 텍스트에 적용
   - 멀티라인 텍스트 지원
   - 문법: {key} 형식으로 placeholder 지정
+  - 
   - 예시:
-    ```python
-    dictionary = {"cloth": "shirts and pants"}
-    template = "1 man wears {cloth}"
-    result = "1 man wears shirts and pants"
-    ```
+    [DictionaryTempleteExample](./images/DictionaryTempleteExample.jpg)
 
 - DictMultilineSelect
   - 멀티라인 텍스트에서 특정 라인을 선택하여 dictionary에 추가
@@ -66,10 +65,8 @@ Dictionary와 모델 컴포넌트들(MODEL, CLIP, VAE 등)을 함께 관리하�
 ## LoRA Preset Management
 LoRA 모델과 프롬프트를 프리셋으로 관리하고 적용하기 위한 노드들입니다.
 
-## LoRA Preset Management
-LoRA 모델과 프롬프트를 프리셋으로 관리하고 적용하기 위한 노드들입니다.
-
 ### Preset Management Nodes
+[PresetExample](./images/PresetExample.jpg)
 - LoraPresetSaver
   - 최대 5개의 LoRA 설정을 프리셋 파일로 저장
   - 각 LoRA에 대해 설정 가능한 항목:
@@ -133,36 +130,6 @@ loras/
   - 프리셋에 저장된 설정값 사용
   - Dictionary Bus 및 Basic Pipe 호환
   - 프롬프트 프리픽스/서픽스 지원
-
-### 프리셋 파일 구조
-```json
-{
-    "lora_name": "model_name.safetensors",
-    "lora_path": "/path/to/lora",
-    "strength": 1.0,
-    "clip_strength": 1.0,
-    "prompt_positive": "positive prompt text",
-    "prompt_negative": "negative prompt text",
-    "nickname": "Display Name"
-}
-```
-
-## 디렉토리 구조
-```
-eugene_comfyui_nodes/
-├── __init__.py
-├── nodes/
-│   ├── __init__.py
-│   ├── dictionary_nodes.py
-│   ├── dictionary_bus.py
-│   └── lora_nodes/
-│       ├── __init__.py
-│       ├── helper.py
-│       ├── preset_nodes.py
-│       ├── loader_nodes.py
-│       └── web.py 
-└── README.md
-```
 
 ## 설치 방법
 1. ComfyUI의 `custom_nodes` 디렉토리에 이 저장소를 클론합니다.

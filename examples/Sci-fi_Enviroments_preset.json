@@ -1,0 +1,9 @@
+{
+    "lora_name": "SD1.5\\Background\\Sci-fi_Enviroments.safetensors",
+    "lora_path": "D:\\ComfyUI_windows_portable_dev\\ComfyUI_windows_portable\\ComfyUI\\models\\loras\\SD1.5\\Background\\Sci-fi_Enviroments.safetensors",
+    "strength": 1.0,
+    "clip_strength": 1.0,
+    "prompt_positive": "Sci-fi,background",
+    "prompt_negative": "medival",
+    "nickname": "[SD 1.5] SciFi-Background"
+}
