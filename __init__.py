@@ -28,7 +28,7 @@ from .nodes.lora_nodes import (
     setup_web
 )
 
-from .nodes.remote_executor import RemoteWorkflowExecutor
+from .nodes.remote_executor import *
 
 NODE_CLASS_MAPPINGS = {
     # Dictionary Nodes
@@ -50,7 +50,11 @@ NODE_CLASS_MAPPINGS = {
     "LoraPresetLoader": AdvancedLoraLoader,
     "LoraPresetListLoader": ListBasedLoraLoader,
 
-    "RemoteWorkflowExecutor": RemoteWorkflowExecutor
+    "RemoteWorkflowExecutor": RemoteWorkflowExecutor,
+    "DatabaseStorage": DatabaseNode,
+    "GateServer": GateServerNode,
+    "GateClient": GateClientNode
+
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -74,7 +78,10 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoraPresetLoader": "LoRA Preset Loader & Encoder",
     "LoraPresetListLoader": "LoRA Preset List Loader & Encoder",
 
-    "RemoteWorkflowExecutor": "Remote Workflow Executor"
+    "RemoteWorkflowExecutor": "Remote Workflow Executor",
+    "DatabaseStorage": "Database Storage",
+    "GateServer": "Gate Server",
+    "GateClient": "Gate Client"
 }
 
 # Get the web server instance from ComfyUI
