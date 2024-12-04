@@ -28,6 +28,8 @@ from .nodes.lora_nodes import (
     setup_web
 )
 
+from .nodes.remote_executor import RemoteWorkflowExecutor
+
 NODE_CLASS_MAPPINGS = {
     # Dictionary Nodes
     "DictUpdate1": DictUpdate1,
@@ -47,6 +49,8 @@ NODE_CLASS_MAPPINGS = {
     "LoraPresetSelector": PresetSelector,
     "LoraPresetLoader": AdvancedLoraLoader,
     "LoraPresetListLoader": ListBasedLoraLoader,
+
+    "RemoteWorkflowExecutor": RemoteWorkflowExecutor
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -68,7 +72,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoraPresetSaver": "LoRA Preset Saver",
     "LoraPresetSelector": "LoRA Preset Selector",
     "LoraPresetLoader": "LoRA Preset Loader & Encoder",
-    "LoraPresetListLoader": "LoRA Preset List Loader & Encoder"
+    "LoraPresetListLoader": "LoRA Preset List Loader & Encoder",
+
+    "RemoteWorkflowExecutor": "Remote Workflow Executor"
 }
 
 # Get the web server instance from ComfyUI
