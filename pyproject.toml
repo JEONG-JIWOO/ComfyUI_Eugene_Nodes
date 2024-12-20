@@ -1,0 +1,14 @@
+[project]
+name = "comfyui_eugene_nodes"
+description = "A collection of utility nodes using Dictionary designed to optimize and manage workflows in ComfyUI."
+version = "1.0.0"
+license = {file = "LICENSE"}
+
+[project.urls]
+Repository = "https://github.com/JEONG-JIWOO/ComfyUI_Eugene_Nodes"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI_Eugene_Nodes"
+Icon = ""
