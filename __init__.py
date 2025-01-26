@@ -23,9 +23,11 @@ from .nodes.dictionary_bus import (
 from .nodes.lora_nodes import (
     PresetSaver,
     PresetSelector,
+    MultiPresetSelector,
     AdvancedLoraLoader,
     ListBasedLoraLoader,
-    setup_web
+    ListBasedLoraLoadOnly,
+    setup_web,
 )
 
 from .nodes.remote_executor import *
@@ -47,8 +49,10 @@ NODE_CLASS_MAPPINGS = {
     # LoRA Nodes
     "LoraPresetSaver": PresetSaver,
     "LoraPresetSelector": PresetSelector,
+    "LoraMultiPresetSelector":MultiPresetSelector,
     "LoraPresetLoader": AdvancedLoraLoader,
     "LoraPresetListLoader": ListBasedLoraLoader,
+    "ListBasedLoraLoadOnly": ListBasedLoraLoadOnly,
 
     "RemoteWorkflowExecutor": RemoteWorkflowExecutor,
     "DatabaseStorage": DatabaseNode,
@@ -75,8 +79,10 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     # LoRA Nodes
     "LoraPresetSaver": "LoRA Preset Saver",
     "LoraPresetSelector": "LoRA Preset Selector",
+    "LoraMultiPresetSelector": "LoRA Multi Selector",
     "LoraPresetLoader": "LoRA Preset Loader & Encoder",
     "LoraPresetListLoader": "LoRA Preset List Loader & Encoder",
+    "ListBasedLoraLoadOnly" : "LoRA Preset List Loader Only",
 
     "RemoteWorkflowExecutor": "Remote Workflow Executor",
     "DatabaseStorage": "Database Storage",
