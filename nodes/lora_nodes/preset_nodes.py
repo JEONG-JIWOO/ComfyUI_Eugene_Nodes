@@ -5,6 +5,7 @@ Provides nodes for saving and selecting LoRA presets
 
 import folder_paths
 import os
+import json
 from .helper import LoraPresetHelper
 
 
@@ -146,14 +147,35 @@ class MultiPresetSelector:
     all_presets = []
 
     @classmethod
+    def INPUT_TYPES(cls):
+        if not cls.all_subfolders:
+            cls.initialize_data()
+
+        return {
+            "required": {
+                "subfolder": (cls.all_subfolders,),
+                "bypass": ("BOOLEAN", {"default": False}),
+                "refresh": ("BOOLEAN", {"default": False}),
+                "output_loras": ("STRING", {"default": "[]"}),  # display_name list as JSON string
+            },
+            "optional": {
+                "input_lora_list": ("LIST",)  # 다른 노드에서 입력받을 프리셋 경로 리스트
+            }
+        }
+
+    RETURN_TYPES = ("LIST",)
+    RETURN_NAMES = ("lora_list",)
+    FUNCTION = "select_presets"
+    CATEGORY = "lora/preset"
+
+    @classmethod
     def initialize_data(cls):
         cls.all_subfolders = LoraPresetHelper.get_subfolder_list()
         cls.all_presets = LoraPresetHelper.list_presets()
 
     @classmethod
     def update_data(cls):
-        cls.all_subfolders = LoraPresetHelper.get_subfolder_list()
-        cls.all_presets = LoraPresetHelper.list_presets()
+        cls.initialize_data()
         return {
             "subfolders": cls.all_subfolders,
             "presets": [
@@ -162,63 +184,36 @@ class MultiPresetSelector:
             ]
         }
 
-    @classmethod
-    def INPUT_TYPES(cls):
-        if not cls.all_subfolders:
-            cls.initialize_data()
-
-        preset_options = [preset[1] for preset in cls.all_presets]
-
-        inputs = {
-            "required": {
-                "subfolder": (cls.all_subfolders,),
-                "weight": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
-                "bypass": ("BOOLEAN", {"default": False}),
-                "refresh": ("BOOLEAN", {"default": False})
-            },
-            "optional": {
-                "lora_list": ("LIST",),
-            }
-        }
-
-        # Add 10 preset inputs
-        for i in range(1, 11):
-            inputs["required"][f"preset{i}"] = (preset_options,)
-
-        return inputs
-
-    RETURN_TYPES = ("LIST",)
-    RETURN_NAMES = ("lora_list",)
-    FUNCTION = "select_presets"
-    CATEGORY = "lora/preset"
-
-    def select_presets(self, subfolder, weight, bypass, refresh, lora_list=None, **kwargs):
+    def select_presets(self, subfolder, bypass, refresh, output_loras, input_lora_list=None):
         if refresh:
             self.update_data()
 
-        current_list = list(lora_list) if lora_list is not None else []
-
         if bypass:
-            return (current_list,)
+            return (input_lora_list if input_lora_list is not None else [],)
 
         try:
-            for i in range(1, 11):
-                preset = kwargs.get(f"preset{i}")
-                if preset and preset != "none":
-                    preset_path = next((path for path, display_name in self.all_presets
-                                        if display_name == preset), None)
+            # JSON 문자열을 Python 리스트로 변환 (display_name 리스트)
+            display_names = json.loads(output_loras)
 
-                    if preset_path and preset_path not in current_list:
-                        current_list.append(preset_path)
+            # display_name을 preset_path로 변환
+            preset_paths = []
+            for display_name in display_names:
+                # all_presets에서 해당하는 path 찾기
+                for path, name in self.all_presets:
+                    if name == display_name:
+                        preset_paths.append(path)
+                        break
 
-            return (current_list,)
+            return (preset_paths,)
 
+        except json.JSONDecodeError:
+            print(f"Error decoding output_loras JSON: {output_loras}")
+            return ([],)
         except Exception as e:
-            print(f"Error in select_presets: {e}")
-            return (current_list,)
+            print(f"Error processing presets: {str(e)}")
+            return ([],)
 
     @classmethod
     def IS_CHANGED(cls, **kwargs):
-        cls.all_subfolders = LoraPresetHelper.get_subfolder_list()
-        cls.all_presets = LoraPresetHelper.list_presets()
+        cls.initialize_data()
         return True

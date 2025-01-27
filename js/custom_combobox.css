@@ -1,0 +1,83 @@
+.custom-combo-container {
+  position: relative;
+  width: 100%;
+  margin: 4px 0;
+}
+
+.controls-wrapper {
+  display: flex;
+  gap: 4px;
+}
+
+.combo-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 4px 8px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.combo-button.disabled {
+  background: #f0f0f0;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  padding: 4px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.toggle-button.active {
+  background: #3b82f6;
+  border-color: #2563eb;
+  color: white;
+}
+
+.toggle-button.disabled {
+  background: #f0f0f0;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.combo-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 200px;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.combo-dropdown li {
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.combo-dropdown li:hover {
+  background: #f0f0f0;
+}
+
+.custom-combos-container {
+  padding: 8px;
+}
+
+.combo-wrapper {
+  margin-bottom: 4px;
+}
