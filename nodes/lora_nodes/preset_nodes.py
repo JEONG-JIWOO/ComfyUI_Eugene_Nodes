@@ -154,6 +154,7 @@ class MultiPresetSelector:
         return {
             "required": {
                 "subfolder": (cls.all_subfolders,),
+                "weight": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                 "bypass": ("BOOLEAN", {"default": False}),
                 "refresh": ("BOOLEAN", {"default": False}),
                 "output_loras": ("STRING", {"default": "[]"}),  # display_name list as JSON string
@@ -184,7 +185,7 @@ class MultiPresetSelector:
             ]
         }
 
-    def select_presets(self, subfolder, bypass, refresh, output_loras, input_lora_list=None):
+    def select_presets(self, subfolder, bypass,  weight, refresh, output_loras, input_lora_list=None):
         if refresh:
             self.update_data()
 
@@ -196,14 +197,13 @@ class MultiPresetSelector:
             display_names = json.loads(output_loras)
 
             # display_name을 preset_path로 변환
-            preset_paths = []
+            preset_paths = list(input_lora_list) if input_lora_list is not None else []
             for display_name in display_names:
                 # all_presets에서 해당하는 path 찾기
                 for path, name in self.all_presets:
                     if name == display_name:
                         preset_paths.append(path)
                         break
-
             return (preset_paths,)
 
         except json.JSONDecodeError:
