@@ -9,22 +9,24 @@ import json
 from .helper import LoraPresetHelper
 
 
-class PresetSaver:
+class SinglePresetSaver:
     @classmethod
     def INPUT_TYPES(cls):
         lora_files = folder_paths.get_filename_list("loras")
         return {
             "required": {
                 "triggered": ("BOOLEAN", {"default": False}),
+                "lora_name": (["none"] + lora_files,),
+                "strength": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
+                "clip_strength": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
                 "suffix": ("STRING", {"default": ""}),
+                "nickname": ("STRING", {"default": ""}),
             },
             "optional": {
-                **{f"lora_{i + 1}_{param}":
-                       (["none"] + lora_files,) if param == "name" else
-                       ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}) if param in ["strength", "clip_strength"] else
-                       ("STRING", {"multiline": True, "default": ""}) if param in ["prompt_positive", "prompt_negative"] else
-                       ("STRING", {"default": ""})
-                   for i in range(5) for param in ["name", "nickname", "strength", "clip_strength", "prompt_positive", "prompt_negative"]}
+                "prompt_positive": ("STRING", {"multiline": True, "default": ""}),
+                "prompt_negative": ("STRING", {"multiline": True, "default": ""}),
+                "sub_positive": ("STRING", {"multiline": True, "default": ""}),
+                "sub_negative": ("STRING", {"multiline": True, "default": ""})
             }
         }
 
@@ -32,192 +34,78 @@ class PresetSaver:
     FUNCTION = "save_preset"
     CATEGORY = "lora/preset"
 
-    @classmethod
-    def save_preset(cls, triggered, suffix, **kwargs):
-        """Saves multiple LoRA presets at once."""
-        if not triggered:
-            return ("LoRA presets not saved. Set 'triggered' to True to save.",)
+    def save_preset(self, triggered, lora_name, strength, clip_strength, suffix, nickname,
+                    prompt_positive="", prompt_negative="", sub_positive="", sub_negative=""):
+        if not triggered or lora_name == "none":
+            return ("LoRA preset not saved. Set 'triggered' to True and select a LoRA.",)
 
-        saved_files = []
-        for i in range(5):
-            lora_name = kwargs.get(f"lora_{i + 1}_name")
-            if lora_name and lora_name != "none":
-                preset_name = os.path.splitext(lora_name)[0]
-                nickname = kwargs.get(f"lora_{i + 1}_nickname", "")
-                lora_data = {
-                    "lora_name": lora_name,
-                    "lora_path": os.path.join(LoraPresetHelper.get_lora_folder_path(), lora_name),
-                    "strength": kwargs.get(f"lora_{i + 1}_strength", 1.0),
-                    "clip_strength": kwargs.get(f"lora_{i + 1}_clip_strength", 1.0),
-                    "prompt_positive": kwargs.get(f"lora_{i + 1}_prompt_positive", ""),
-                    "prompt_negative": kwargs.get(f"lora_{i + 1}_prompt_negative", ""),
-                }
-                saved_file = LoraPresetHelper.save_preset(preset_name, lora_data, suffix, nickname)
-                saved_files.append(saved_file)
-
-        return (f"LoRA presets saved to: {', '.join(saved_files)}",)
-
-
-class PresetSelector:
-    # Class variables for storing preset data
-    all_subfolders = []
-    all_presets = []
-
-    @classmethod
-    def initialize_data(cls):
-        """Initialize all data when node is loaded"""
-        cls.all_subfolders = LoraPresetHelper.get_subfolder_list()
-        cls.all_presets = LoraPresetHelper.list_presets()
-
-    @classmethod
-    def update_data(cls):
-        """Update data method"""
-        cls.all_subfolders = LoraPresetHelper.get_subfolder_list()
-        cls.all_presets = LoraPresetHelper.list_presets()
-        return {
-            "subfolders": cls.all_subfolders,
-            "presets": [
-                {"path": path, "display_name": display_name}
-                for path, display_name in cls.all_presets
-            ]
+        preset_name = os.path.splitext(lora_name)[0]
+        lora_data = {
+            "lora_name": lora_name,
+            "lora_path": os.path.join(LoraPresetHelper.get_lora_folder_path(), lora_name),
+            "strength": strength,
+            "clip_strength": clip_strength,
+            "prompt_positive": prompt_positive,
+            "prompt_negative": prompt_negative,
+            "sub_positive": sub_positive,
+            "sub_negative": sub_negative,
         }
 
-    @classmethod
-    def INPUT_TYPES(cls):
-        if not cls.all_subfolders:
-            cls.initialize_data()
-
-        return {
-            "required": {
-                "subfolder": (cls.all_subfolders,),
-                "preset": ([preset[1] for preset in cls.all_presets],),
-                "weight": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
-                "bypass": ("BOOLEAN", {"default": False}),
-                "refresh": ("BOOLEAN", {"default": False})
-            },
-            "optional": {
-                "lora_list": ("LIST",),
-            }
-        }
-
-    RETURN_TYPES = ("LIST",)
-    RETURN_NAMES = ("lora_list",)
-    FUNCTION = "select_preset"
-    CATEGORY = "lora/preset"
-
-    def select_preset(self, subfolder, preset, weight, bypass, refresh, lora_list=None):
-        """Process preset selection"""
-        if refresh:
-            self.update_data()
-
-        current_list = list(lora_list) if lora_list is not None else []
-
-        try:
-            if bypass or preset == "none":
-                return (current_list,)
-
-            preset_path = None
-            for path, display_name in self.all_presets:
-                if display_name == preset:
-                    preset_path = path
-                    break
-
-            if preset_path is None:
-                print(f"Warning: No matching preset found for display_name: {preset}")
-                return (current_list,)
-
-            if preset_path not in current_list:
-                current_list.append(preset_path)
-
-            return (current_list,)
-
-        except Exception as e:
-            print(f"Error in select_preset: {e}")
-            return (current_list,)
-
-    @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        cls.all_subfolders = LoraPresetHelper.get_subfolder_list()
-        cls.all_presets = LoraPresetHelper.list_presets()
-        return True
+        saved_file = LoraPresetHelper.save_preset(preset_name, lora_data, suffix, nickname)
+        return (f"LoRA preset saved to: {saved_file}",)
 
 
-class MultiPresetSelector:
-    all_subfolders = []
-    all_presets = []
+"""
+# ComfyUI LoRA 프리셋 관리 딕셔너리 구조
 
-    @classmethod
-    def INPUT_TYPES(cls):
-        if not cls.all_subfolders:
-            cls.initialize_data()
+## 기본 구조
+```python
+{
+    "lora_info": {
+        "별명": [파일경로, 표시명, 강도, 클립강도, [유효키워드리스트]],
+        ...
+    },
+    "lora_keywards": {
+        "키워드": "프롬프트내용",
+        ...
+    }  
+}
+```
 
-        return {
-            "required": {
-                "subfolder": (cls.all_subfolders,),
-                "weight": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
-                "bypass": ("BOOLEAN", {"default": False}),
-                "refresh": ("BOOLEAN", {"default": False}),
-                "output_loras": ("STRING", {"default": "[]"}),  # display_name list as JSON string
-            },
-            "optional": {
-                "input_lora_list": ("LIST",)  # 다른 노드에서 입력받을 프리셋 경로 리스트
-            }
-        }
+## lora_info
+- 키: LoRA의 식별자로 사용할 별명 (예: "chilloutmix", "animeHQ")
+- 값: 리스트 형태로 LoRA 기본 정보 저장
+  1. 파일경로: LoRA 모델 파일 위치
+  2. 표시명: UI에 표시될 이름
+  3. 강도: LoRA 적용 강도 (기본값 1.0)
+  4. 클립강도: CLIP 모델 적용 강도 (기본값 1.0)
+  5. 유효키워드리스트: 해당 LoRA의 유효한 프롬프트 키워드 목록
 
-    RETURN_TYPES = ("LIST",)
-    RETURN_NAMES = ("lora_list",)
-    FUNCTION = "select_presets"
-    CATEGORY = "lora/preset"
+## lora_keywards
+- 키: `{별명}_{프롬프트타입}` 형식의 키워드
+  - 프롬프트타입: P(positive), N(negative), SP(sub_positive), SN(sub_negative)
+- 값: 실제 프롬프트 텍스트
+- 빈 문자열이나 누락된 프롬프트는 포함하지 않음
 
-    @classmethod
-    def initialize_data(cls):
-        cls.all_subfolders = LoraPresetHelper.get_subfolder_list()
-        cls.all_presets = LoraPresetHelper.list_presets()
-
-    @classmethod
-    def update_data(cls):
-        cls.initialize_data()
-        return {
-            "subfolders": cls.all_subfolders,
-            "presets": [
-                {"path": path, "display_name": display_name}
-                for path, display_name in cls.all_presets
-            ]
-        }
-
-    def select_presets(self, subfolder, bypass,  weight, refresh, output_loras, input_lora_list=None):
-        if refresh:
-            self.update_data()
-
-        if bypass:
-            return (input_lora_list if input_lora_list is not None else [],)
-
-        try:
-            # JSON 문자열을 Python 리스트로 변환 (display_name 리스트)
-            display_names = json.loads(output_loras)
-
-            # display_name을 preset_path로 변환
-            preset_paths = list(input_lora_list) if input_lora_list is not None else []
-            for display_name in display_names:
-                # all_presets에서 해당하는 path 찾기
-                for path, name in self.all_presets:
-                    if name == display_name:
-                        preset_paths.append(path)
-                        break
-            return (preset_paths,)
-
-        except json.JSONDecodeError:
-            print(f"Error decoding output_loras JSON: {output_loras}")
-            return ([],)
-        except Exception as e:
-            print(f"Error processing presets: {str(e)}")
-            return ([],)
-
-    @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        cls.initialize_data()
-        return True
-
+## 사용 예시
+```python
+{
+    "lora_info": {
+        "anime": [
+            "/loras/anime.safetensors",
+            "Anime Style LoRA",
+            0.8,
+            0.7,
+            ["anime_P", "anime_SP"]  # 유효한 프롬프트만 포함
+        ]
+    },
+    "lora_keywards": {
+        "anime_P": "masterpiece, best quality",
+        "anime_SP": "beautiful anime style"
+    }
+}
+```
+"""
 
 class PresetSelectorV2:
     all_subfolders = []
@@ -231,7 +119,7 @@ class PresetSelectorV2:
         return {
             "required": {
                 "subfolder": (cls.all_subfolders,),
-                "lora_key": ("STRING", {"default": "lora1"}),
+                "Alias": ("STRING", {"default": "lora1"}),
                 "override_weights": ("BOOLEAN", {"default": False}),
                 "strength": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                 "clip_strength": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
@@ -267,63 +155,75 @@ class PresetSelectorV2:
             ]
         }
 
-    def select_preset(self, subfolder, lora_key, override_weights, strength, clip_strength,
+    def select_preset(self, subfolder, Alias, override_weights, strength, clip_strength,
                       bypass, refresh, output_loras, input_lora_dict=None):
-        """Select a single preset and return as a lora dictionary"""
+        """Select preset and return restructured lora dictionary"""
         if refresh:
             self.update_data()
 
-        current_dict = dict(input_lora_dict) if input_lora_dict is not None else {}
+        if input_lora_dict:
+            result = input_lora_dict
+        else :
+            result = {
+                "lora_info": {},
+                "lora_keywards": {}
+            }
 
         if bypass:
-            return (current_dict,)
+            return (result,)
 
         try:
-            # Parse the output_loras JSON string - expecting single item
             display_names = json.loads(output_loras)
-            if not display_names:  # Empty list
-                return (current_dict,)
+            if not display_names:
+                return (result,)
 
-            # Take only the first display name
             display_name = display_names[0]
-
-            # Find the corresponding preset path
-            preset_path = None
-            for path, name in self.all_presets:
-                if name == display_name:
-                    preset_path = path
-                    break
+            preset_path = next((path for path, name in self.all_presets if name == display_name), None)
 
             if preset_path is None:
                 print(f"Warning: No matching preset found for display_name: {display_name}")
-                return (current_dict,)
+                return (result,)
 
-            # Load preset data
             preset_data = LoraPresetHelper.load_preset_data().get(preset_path)
             if preset_data is None:
                 print(f"Warning: No preset data found for: {preset_path}")
-                return (current_dict,)
+                return (result,)
 
-            # Create lora entry
-            lora_entry = {
-                "path": preset_path,
-                "display_name": display_name,
-                "positive_prompt": preset_data.get("prompt_positive", ""),
-                "negative_prompt": preset_data.get("prompt_negative", ""),
-                "strength": strength if override_weights else preset_data.get("strength", 1.0),
-                "clip_strength": clip_strength if override_weights else preset_data.get("clip_strength", 1.0)
-            }
+            # 새로운 lora 엔트리 생성
+            prompt_keys = []
+            result["lora_info"][Alias] = [
+                preset_path,
+                display_name,
+                strength if override_weights else preset_data.get("strength", 1.0),
+                clip_strength if override_weights else preset_data.get("clip_strength", 1.0),
+                prompt_keys
+            ]
 
-            # Update dictionary with new entry
-            current_dict[lora_key] = lora_entry
-            return (current_dict,)
+            # 유효한 프롬프트 검사 및 저장
+            if p := preset_data.get("prompt_positive"):
+                prompt_keys.append(f"{Alias}_P")
+                result["lora_keywards"][f"{Alias}_P"] = p
+
+            if n := preset_data.get("prompt_negative"):
+                prompt_keys.append(f"{Alias}_N")
+                result["lora_keywards"][f"{Alias}_N"] = n
+
+            if sp := preset_data.get("sub_positive"):
+                prompt_keys.append(f"{Alias}_SP")
+                result["lora_keywards"][f"{Alias}_SP"] = sp
+
+            if sn := preset_data.get("sub_negative"):
+                prompt_keys.append(f"{Alias}_SN")
+                result["lora_keywards"][f"{Alias}_SN"] = sn
+
+            return (result,)
 
         except json.JSONDecodeError:
             print(f"Error decoding output_loras JSON: {output_loras}")
-            return (current_dict,)
+            return (result,)
         except Exception as e:
             print(f"Error in select_preset: {str(e)}")
-            return (current_dict,)
+            return (result,)
 
     @classmethod
     def IS_CHANGED(cls, **kwargs):

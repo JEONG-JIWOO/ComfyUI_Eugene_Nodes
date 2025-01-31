@@ -340,28 +340,42 @@ class ListBasedLoraLoadOnly(AdvancedLoraLoader):
         return input_dictionary, model, clip, vae, positive_prompt, negative_prompt
 
 
+"""DictBasedLoraLoader - LoRA 모델 로더 및 프롬프트 처리 노드
+
+lora_dict 구조:
+{
+   "lora_info": {
+       "별명": [파일경로, 표시명, 강도, 클립강도, [유효키워드리스트]],
+   },
+   "lora_keywards": {
+       "별명_P/N/SP/SN": "프롬프트내용",
+   }
+}
+"""
+
+
 class DictBasedLoraLoader:
-    loaded_loras = {}  # Cache for loaded LoRAs
+    loaded_loras = {}  # 로딩된 LoRA 캐시
 
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "positive_prefix": ("STRING", {"multiline": True}),
-                "positive_suffix": ("STRING", {"multiline": True}),
-                "negative_prefix": ("STRING", {"multiline": True}),
-                "negative_suffix": ("STRING", {"multiline": True}),
-                "stop_at_clip_layer": ("INT", {"default": -1, "min": -24, "max": 0, "step": 1}),
+                "positive_prefix": ("STRING", {"multiline": True}),  # 양성 프롬프트 접두사
+                "positive_suffix": ("STRING", {"multiline": True}),  # 양성 프롬프트 접미사
+                "negative_prefix": ("STRING", {"multiline": True}),  # 음성 프롬프트 접두사
+                "negative_suffix": ("STRING", {"multiline": True}),  # 음성 프롬프트 접미사
+                "stop_at_clip_layer": ("INT", {"default": -1, "min": -24, "max": 0, "step": 1}),  # CLIP 모델 레이어 제한
             },
             "optional": {
-                "input_dictionary": ("DICT",),
-                "model": ("MODEL",),
-                "clip": ("CLIP",),
-                "vae": ("VAE",),
-                "basic_pipe": ("BASIC_PIPE",),
-                "dict_bus": ("DICT_BUS",),
-                "lora_dict": ("DICT",),
-                "do_conditioning": ("BOOLEAN", {"default": True}),
+                "input_dictionary": ("DICT",),  # 추가 키워드 사전
+                "model": ("MODEL",),  # 기본 모델
+                "clip": ("CLIP",),  # CLIP 모델
+                "vae": ("VAE",),  # VAE 모델
+                "basic_pipe": ("BASIC_PIPE",),  # 기본 파이프라인
+                "dict_bus": ("DICT_BUS",),  # 사전 버스
+                "lora_dict": ("DICT",),  # LoRA 사전
+                "do_conditioning": ("BOOLEAN", {"default": True}),  # 컨디셔닝 수행 여부
             }
         }
 
@@ -371,41 +385,19 @@ class DictBasedLoraLoader:
     FUNCTION = "process_loras"
     CATEGORY = "lora/loader"
 
-    def _replace_lora_keys(self, text, input_dictionary, lora_dict):
-        """Replace both input dictionary keys and lora keys in the text.
-        Returns tuple of (processed_text, set of found lora keys)"""
-        if not text:
-            return "", set()
-
-        # First replace input dictionary keys
-        text = LoraPresetHelper.replace_dict_keys(text, input_dictionary)
-
-        # Find all LoRA keys in the text
-        found_keys = set(re.findall(r'\{#([^}]+)\}', text))
-
-        # Then replace lora keys with prompts
-        def replace_lora_key(match):
-            key = match.group(1)
-            if key in lora_dict:
-                return lora_dict[key].get("positive_prompt", "")
-            return ""  # Key not found, return empty string
-
-        processed_text = re.sub(r'\{#([^}]+)\}', replace_lora_key, text)
-
-        return processed_text, found_keys
-
-    def _process_text_and_get_keys(self, text, input_dictionary, lora_dict):
-        """Process text and return both processed text and found LoRA keys"""
-        if not text:
-            return "", set()
-        return self._replace_lora_keys(text, input_dictionary, lora_dict)
-
     def process_loras(self, positive_prefix, positive_suffix, negative_prefix, negative_suffix,
                       stop_at_clip_layer, input_dictionary={}, model=None, clip=None, vae=None,
                       basic_pipe=None, dict_bus=None, lora_dict=None, do_conditioning=True):
-        """Process LoRA dictionary and apply to model"""
+        """LoRA 모델 로드 및 프롬프트 처리
 
-        # Handle input sources
+        처리 단계:
+        1. 입력 모델 초기화 - dict_bus나 basic_pipe에서 모델 불러오기
+        2. LoRA 모델 로드 - 유효 키워드가 있는 LoRA만 로드
+        3. 프롬프트 처리 - 입력 사전과 LoRA 키워드를 통합하여 치환
+        4. 컨디셔닝 생성 - 최종 프롬프트로 CLIP 인코딩
+        """
+
+        # 1. 입력 모델 초기화
         if dict_bus is not None:
             dict_mb, model_mb, clip_mb, vae_mb, _, _, _ = dict_bus
             input_dictionary = input_dictionary or dict_mb
@@ -420,107 +412,47 @@ class DictBasedLoraLoader:
             vae = vae or vae_bp
 
         assert model is not None and clip is not None and vae is not None, "Model, CLIP, and VAE are required"
-        lora_dict = lora_dict or {}
 
-        # Modify CLIP model if needed
+        # CLIP 모델 레이어 제한 설정
+        clip_modified = clip.clone()
         if stop_at_clip_layer < 0:
-            clip_modified = clip.clone()
             clip_modified.clip_layer(stop_at_clip_layer)
-        else:
-            clip_modified = clip
 
-        # Process prompts and collect used LoRA keys
-        used_lora_keys = set()
+        # 2. LoRA 모델 로드
 
-        # Process prefix prompts
-        pos_prefix_text, pos_prefix_keys = self._process_text_and_get_keys(positive_prefix, input_dictionary, lora_dict)
-        neg_prefix_text, neg_prefix_keys = self._process_text_and_get_keys(negative_prefix, input_dictionary, lora_dict)
-        used_lora_keys.update(pos_prefix_keys)
-        used_lora_keys.update(neg_prefix_keys)
+        # 키워드 존재 검사를 위한 전체프름프트
+        total_prompts = [positive_prefix, negative_prefix, positive_suffix, negative_suffix]
 
-        positive_prompts = [pos_prefix_text]
-        negative_prompts = [neg_prefix_text]
+        if lora_dict and "lora_info" in lora_dict:
+            for alias, info in lora_dict["lora_info"].items():
+                path, _, strength, clip_strength, prompt_keys = info
+                # 유효 키워드가 있는 LoRA만 로드
+                if prompt_keys and path and path != "none":
+                    if self.has_prompting_keys(total_prompts,prompt_keys):
+                        try:
+                            model, clip_modified = LoraPresetHelper.load_and_apply_lora(
+                                self.loaded_loras, model, clip_modified,
+                                path, strength, clip_strength
+                            )
+                        except Exception as e:
+                            print(f"Error loading LoRA {alias}: {str(e)}")
 
-        print(f"[DEBUG] Used LoRA keys: {used_lora_keys}")
+        # 3. 프롬프트 처리
+        combined_dict = dict(input_dictionary or {})
+        if lora_dict and "lora_keywards" in lora_dict:
+            combined_dict.update(lora_dict["lora_keywards"])
 
-        if lora_dict and used_lora_keys:
-            # Process only LoRAs that were referenced in prompts
-            for lora_key, lora_info in lora_dict.items():
-                if lora_key not in used_lora_keys:
-                    print(f"[DEBUG] Skipping unused LoRA: {lora_key}")
-                    continue
+        # 프롬프트 키워드 치환
+        pos_prefix = LoraPresetHelper.replace_dict_keys(positive_prefix, combined_dict)
+        neg_prefix = LoraPresetHelper.replace_dict_keys(negative_prefix, combined_dict)
+        pos_suffix = LoraPresetHelper.replace_dict_keys(positive_suffix, combined_dict)
+        neg_suffix = LoraPresetHelper.replace_dict_keys(negative_suffix, combined_dict)
 
-                print(f"\n[DEBUG] Processing LoRA: {lora_key}")
-                print(f"[DEBUG] LoRA info: {lora_info}")
+        # 최종 프롬프트 생성
+        positive_prompt = LoraPresetHelper.clean_prompt(f"{pos_prefix}, {pos_suffix}")
+        negative_prompt = LoraPresetHelper.clean_prompt(f"{neg_prefix}, {neg_suffix}")
 
-                try:
-                    if not isinstance(lora_info, dict):
-                        print(f"Warning: Invalid LoRA info for key {lora_key}")
-                        continue
-
-                    preset_path = lora_info.get("path")
-                    if not preset_path or preset_path == "none":
-                        continue
-
-                    # First load the JSON preset file
-                    json_path = os.path.join(LoraPresetHelper.get_lora_folder_path(), preset_path)
-                    with open(json_path, 'r') as f:
-                        preset_data = json.load(f)
-
-                    # Get the actual LoRA path from the preset
-                    lora_path = preset_data.get("lora_path") or preset_data.get("lora_name")
-                    if not lora_path:
-                        print(f"[DEBUG] No LoRA path found in preset: {json_path}")
-                        continue
-
-                    # Get weights from preset
-                    model_weight = lora_info.get("strength", 1.0)
-                    clip_weight = lora_info.get("clip_strength", 1.0)
-                    print(f"[DEBUG] Loaded weights from lora_info - Model: {model_weight}, CLIP: {clip_weight}")
-
-                    # Print path info
-                    print(f"[DEBUG] JSON preset path: {json_path}")
-                    print(f"[DEBUG] LoRA path from preset: {lora_path}")
-
-                    # Load and apply LoRA
-                    if stop_at_clip_layer < 1:
-                        print("[DEBUG] Applying LoRA with weights...")
-
-                        # Use either the full path or join with the LoRA folder path
-                        if os.path.isabs(lora_path):
-                            final_lora_path = lora_path
-                        else:
-                            final_lora_path = os.path.join(LoraPresetHelper.get_lora_folder_path(), lora_path)
-
-                        print(f"[DEBUG] Final LoRA path: {final_lora_path}")
-
-                        model, clip_modified = LoraPresetHelper.load_and_apply_lora(
-                            self.loaded_loras,
-                            model,
-                            clip_modified,
-                            final_lora_path,
-                            model_weight,
-                            clip_weight
-                        )
-
-                except Exception as e:
-                    print(f"Error processing LoRA {lora_key}: {str(e)}")
-                    continue
-
-        # Process suffix prompts
-        pos_suffix_text, pos_suffix_keys = self._process_text_and_get_keys(positive_suffix, input_dictionary, lora_dict)
-        neg_suffix_text, neg_suffix_keys = self._process_text_and_get_keys(negative_suffix, input_dictionary, lora_dict)
-        used_lora_keys.update(pos_suffix_keys)
-        used_lora_keys.update(neg_suffix_keys)
-
-        positive_prompts.append(pos_suffix_text)
-        negative_prompts.append(neg_suffix_text)
-
-        # Clean and join prompts
-        positive_prompt = LoraPresetHelper.clean_prompt(", ".join(filter(None, positive_prompts)))
-        negative_prompt = LoraPresetHelper.clean_prompt(", ".join(filter(None, negative_prompts)))
-
-        # Initialize and generate conditioning
+        # 4. 컨디셔닝 생성
         positive_conditioning = None
         negative_conditioning = None
 
@@ -531,8 +463,13 @@ class DictBasedLoraLoader:
             except Exception as e:
                 print(f"Error encoding prompts: {str(e)}")
 
-        # Prepare basic pipe for return
+        # 기본 파이프라인 구성
         basic_pipe = (model, clip, vae, positive_conditioning, negative_conditioning)
 
         return (input_dictionary, model, clip_modified, vae, positive_conditioning, negative_conditioning,
                 basic_pipe, positive_prompt, negative_prompt)
+
+    def has_prompting_keys(self, prompts, prompt_keys):
+        """프롬프트들에 키워드가 포함되어 있는지 검사"""
+        combined_text = ", ".join(filter(None, prompts))
+        return any(f"{{{key}}}" in combined_text for key in prompt_keys)

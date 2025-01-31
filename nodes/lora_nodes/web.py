@@ -3,7 +3,7 @@ Web service handlers for LoRA preset management
 """
 
 from aiohttp import web
-from .preset_nodes import PresetSelector
+from .preset_nodes_old import PresetSelector
 
 
 async def get_presets(request):
