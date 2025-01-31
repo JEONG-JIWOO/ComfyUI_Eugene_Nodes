@@ -217,3 +217,115 @@ class MultiPresetSelector:
     def IS_CHANGED(cls, **kwargs):
         cls.initialize_data()
         return True
+
+
+class PresetSelectorV2:
+    all_subfolders = []
+    all_presets = []
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        if not cls.all_subfolders:
+            cls.initialize_data()
+
+        return {
+            "required": {
+                "subfolder": (cls.all_subfolders,),
+                "lora_key": ("STRING", {"default": "lora1"}),
+                "override_weights": ("BOOLEAN", {"default": False}),
+                "strength": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                "clip_strength": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                "bypass": ("BOOLEAN", {"default": False}),
+                "refresh": ("BOOLEAN", {"default": False}),
+                "output_loras": ("STRING", {"default": "[]"})  # JSON string of display_names
+            },
+            "optional": {
+                "input_lora_dict": ("DICT",)
+            }
+        }
+
+    RETURN_TYPES = ("DICT",)
+    RETURN_NAMES = ("selected_lora_dict",)
+    FUNCTION = "select_preset"
+    CATEGORY = "lora/preset"
+
+    @classmethod
+    def initialize_data(cls):
+        """Initialize all data when node is loaded"""
+        cls.all_subfolders = LoraPresetHelper.get_subfolder_list()
+        cls.all_presets = LoraPresetHelper.list_presets()
+
+    @classmethod
+    def update_data(cls):
+        """Update data method"""
+        cls.initialize_data()
+        return {
+            "subfolders": cls.all_subfolders,
+            "presets": [
+                {"path": path, "display_name": display_name}
+                for path, display_name in cls.all_presets
+            ]
+        }
+
+    def select_preset(self, subfolder, lora_key, override_weights, strength, clip_strength,
+                      bypass, refresh, output_loras, input_lora_dict=None):
+        """Select a single preset and return as a lora dictionary"""
+        if refresh:
+            self.update_data()
+
+        current_dict = dict(input_lora_dict) if input_lora_dict is not None else {}
+
+        if bypass:
+            return (current_dict,)
+
+        try:
+            # Parse the output_loras JSON string - expecting single item
+            display_names = json.loads(output_loras)
+            if not display_names:  # Empty list
+                return (current_dict,)
+
+            # Take only the first display name
+            display_name = display_names[0]
+
+            # Find the corresponding preset path
+            preset_path = None
+            for path, name in self.all_presets:
+                if name == display_name:
+                    preset_path = path
+                    break
+
+            if preset_path is None:
+                print(f"Warning: No matching preset found for display_name: {display_name}")
+                return (current_dict,)
+
+            # Load preset data
+            preset_data = LoraPresetHelper.load_preset_data().get(preset_path)
+            if preset_data is None:
+                print(f"Warning: No preset data found for: {preset_path}")
+                return (current_dict,)
+
+            # Create lora entry
+            lora_entry = {
+                "path": preset_path,
+                "display_name": display_name,
+                "positive_prompt": preset_data.get("prompt_positive", ""),
+                "negative_prompt": preset_data.get("prompt_negative", ""),
+                "strength": strength if override_weights else preset_data.get("strength", 1.0),
+                "clip_strength": clip_strength if override_weights else preset_data.get("clip_strength", 1.0)
+            }
+
+            # Update dictionary with new entry
+            current_dict[lora_key] = lora_entry
+            return (current_dict,)
+
+        except json.JSONDecodeError:
+            print(f"Error decoding output_loras JSON: {output_loras}")
+            return (current_dict,)
+        except Exception as e:
+            print(f"Error in select_preset: {str(e)}")
+            return (current_dict,)
+
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        cls.initialize_data()
+        return True
