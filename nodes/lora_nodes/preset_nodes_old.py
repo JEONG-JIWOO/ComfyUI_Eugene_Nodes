@@ -8,7 +8,6 @@ import os
 import json
 from .helper import LoraPresetHelper
 
-'''
 class PresetSaver:
     @classmethod
     def INPUT_TYPES(cls):
@@ -56,7 +55,7 @@ class PresetSaver:
                 saved_files.append(saved_file)
 
         return (f"LoRA presets saved to: {', '.join(saved_files)}",)
-'''
+
 
 class PresetSelector:
     # Class variables for storing preset data

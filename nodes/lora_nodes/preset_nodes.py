@@ -10,37 +10,27 @@ from .helper import LoraPresetHelper
 
 
 """
-Preset Editor
+## Preset Editor 노드의 입력 항목 설명:
+ 1. Subfolder: 문자열 리스트 콤보박스. 초기 값은 ["none"]이며, 나중에 JS를 통해 동적으로 업데이트 됩니다.
+ 2. Select LoRA: ["none"] (추후 동적 업데이트)
+ 3. Select Preset: ["none"] (추후 동적 업데이트)
+ 4. strength_model: 실수형 (기본값 1.0, 범위 -100.0 ~ 100.0, step 0.01)
+ 5. strength_clip: 실수형 (기본값 1.0, 범위 -100.0 ~ 100.0, step 0.01)
+ 6. preset_name_prefix: 문자열 (기본값 빈 문자열)
+ 7. preset_name: 문자열 (기본값 빈 문자열)
+ 8 ~ 10. P1, P2, P3: 문자열 (멀티라인, 기본값 빈 문자열)
+ 11 ~ 13. N1, N2, N3: 문자열 (멀티라인, 기본값 빈 문자열)
+ 14. Load From Preset: 불리언 (기본값 False, 버튼 역할)
+ 15. Load From Civitai: 불리언 (기본값 False, 버튼 역할)
+     - 해당 버튼 클릭 시 civitai API를 호출하여 로라 파일의 해시를 기반으로 데이터를 가져오고,
+       가져온 데이터로 P1, P2, preset_name_prefix, preset_name, 그리고 Result 위젯에 값을 할당합니다.
+ 16. Save JSON: 불리언 (기본값 False, 버튼 역할, 프리셋 JSON 저장)
+ 17. Result: 문자열 (멀티라인, 결과 출력)
+ 
+ 프리셋 JSON의 구조는 하위 호환성을 고려하여 여러 키를 처리합니다.
 
-1. Subfolder : String List combobox
-- 일단 ["none"] 만 들어가있고 추후 js를 통해 동적으로 업데이트 
-
-2. select lora : ["none"]
-- 일단 ["none"] 만 들어가있고 추후 js를 통해 동적으로 업데이트 
-
-3. select preset : 
-- 일단 ["none"] 만 들어가있고 추후 js를 통해 동적으로 업데이트 
-
-4. "strength_model": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
-5. "strength_clip": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
-
-6. "preset_name_prefix": ("STRING", {"default": ""}),
-7. "preset_name" : ("STRING", {"default": ""}),
-8.  "P1": ("STRING", {"multiline": True, "default": ""}),
-9.  "P2": ("STRING", {"multiline": True, "default": ""}),
-10. "P3": ("STRING", {"multiline": True, "default": ""}),
-11. "N1": ("STRING", {"multiline": True, "default": ""}),
-12. "N2": ("STRING", {"multiline": True, "default": ""})
-13. "N3": ("STRING", {"multiline": True, "default": ""})
-
-14. Load From preset ("BOOLEAN", {"default": False}), (JS에서 사용하는 버튼으로 동작)
-15. Load From Civitai ("BOOLEAN", {"default": False}), (JS에서 사용하는 버튼으로 동작)
-
-Load From Civitai 구현 
-
+### Load From Civitai 구현 
 https://civitai.com/api/v1/model-versions/by-hash/{SHA256 HASH}
-
-'''
 {
   "id": 1050496,
   "modelId": 706978,
@@ -57,113 +47,16 @@ https://civitai.com/api/v1/model-versions/by-hash/{SHA256 HASH}
   "trainingDetails": null,
   "baseModel": "Flux.1 D",
   "baseModelType": null,
-  "earlyAccessEndsAt": null,
-  "earlyAccessConfig": null,
-  "description": "\u003Cp\u003ENew Triggers:\u003C/p\u003E\u003Cul\u003E\u003Cli\u003E\u003Cp\u003Eaesthetic_pos3\u003C/p\u003E\u003C/li\u003E\u003Cli\u003E\u003Cp\u003Edynamic_pos3\u003C/p\u003E\u003C/li\u003E\u003C/ul\u003E\u003Cp\u003EIn this new version of Aesthetic Poses v3, I've added new poses, enhanced realism, and trained it with models from all around the world (previously, most of the generated images were primarily of Asian models). I hope you enjoy it!\u003C/p\u003E",
-  "uploadType": "Created",
-  "usageControl": "Download",
-  "air": "urn:air:flux1:lora:civitai:706978@1050496",
-  "stats": {
-    "downloadCount": 3426,
-    "ratingCount": 0,
-    "rating": 0,
-    "thumbsUpCount": 355
-  },
-  "model": {
-    "name": "Realistic/Aesthetic Poses FluxDev",
-    "type": "LORA",
-    "nsfw": false,
-    "poi": false
-  },
-  "files": [
-    {
-      "id": 956231,
-      "sizeKB": 167938.8828125,
-      "name": "aeshteticv5.safetensors",
-      "type": "Model",
-      "pickleScanResult": "Success",
-      "pickleScanMessage": "No Pickle imports",
-      "virusScanResult": "Success",
-      "virusScanMessage": null,
-      "scannedAt": "2024-11-11T11:50:59.770Z",
-      "metadata": {
-        "format": "SafeTensor",
-        "size": null,
-        "fp": null
-      },
-      "hashes": {
-        "AutoV1": "88828AE7",
-        "AutoV2": "21437EC266",
-        "SHA256": "21437EC26670E230B067CA936F6657CAF5CA063F15AEC333EF249BEC7C0F0DC0",
-        "CRC32": "F8F2BE29",
-        "BLAKE3": "AAA6F513C4BFA00031941F3A427046D31A12B161CBE2CE75AAB260C74D13C0FC",
-        "AutoV3": "7AAE878CB805"
-      },
-      "primary": true,
-      "downloadUrl": "https://civitai.com/api/download/models/1050496"
-    }
-  ],
-  "images": [
-    {
-      "url": "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/21bb784f-4759-4a6d-bd04-66964b87903b/width=450/39539160.jpeg",
-      "nsfwLevel": 2,
-      "width": 768,
-      "height": 1280,
-      "hash": "UOF~jNwG5QT076ngkCS$LNRj$iWYpebvxZ$*",
-      "type": "image",
-      "metadata": {
-        "hash": "UOF~jNwG5QT076ngkCS$LNRj$iWYpebvxZ$*",
-        "size": 1539987,
-        "width": 768,
-        "height": 1280
-      },
-      "meta": {
-        "seed": 185666893452671,
-        "vaes": [
-          "ae.sft"
-        ],
-        "comfy": "...",
-        "steps": 26,
-        "models": [],
-        "prompt": "aesthetic_pos3, dynamic_pos3, Retro-inspired outdoor shot of a woman on a vintage cream-colored bicycle in a sunlit garden. She wears a metallic gold swimsuit, white sneakers, and an oversized translucent orange visor, adding a futuristic touch. Surrounded by lush green trees and a clear blue sky, her relaxed pose and vibrant outfit contrast with the serene park setting, creating a playful, nostalgic vibe.",
-        "denoise": 1,
-        "sampler": "Euler",
-        "cfgScale": 3.5,
-        "modelIds": [],
-        "scheduler": "simple",
-        "upscalers": [],
-        "versionIds": [],
-        "controlNets": [],
-        "additionalResources": [
-          {
-            "name": "aeshteticv5.safetensors",
-            "type": "lora",
-            "strength": 1
-          }
-        ]
-      },
-...
-'''
+  ...
+  "images": [],
+}
 
-"P1" 에 "trainedWords"  할당
-"P2" 에 "images": 의 첫번째 이미지의 "meta"의  "prompt" 할당
+- "P1" 에 "trainedWords"  할당
+- [비활성화] "P2" 에 "images": 의 첫번째 이미지의 "meta"의  "prompt" 할당 
+- "preset_name_prefix" : 비어있다면,  "baseModel" 할당 
+- "preset_name" <- "model" , "name": 할당
 
-"preset_name_prefix" : 비어있다면,  "baseModel" 할당 
-
-"preset_name" <- "name": "Realistic/Aesthetic Poses FluxDev", -> 
-
-그리고 Custom print 대신 직접  "Result" 위젯에 값 할당으로 접속링크인 https://civitai.com/models/${modelId} 를 출력해주자
-
-
-
-16. Save JSon ("BOOLEAN", {"default": False}), (JS에서 사용하는 버튼으로 동작)
-17. result : ("STRING", {"multiline": True, "default": ""})
-
-Python 상에서 실행시 동작 및 리턴 : 없음. 
-
-
-'''
-preset json 구조 
+### preset json 구조 
 {
     "lora_path": "SD1.5/enhance.safetensor",    // 하위호환으로 key가 "lora_name" 인 경우도 처리, windows 경로 정규화도 한번더 처리 
     "strength_model" : 1.0,                     // 하위호환으로 key가 "strength" 인 경우도 처리
@@ -175,7 +68,6 @@ preset json 구조
     "N2": "",                                   // 하위호환으로 key가 "sub_negative" 인 경우도 처리
     "N3": "",                                  
 }
-'''
 
 """
 
@@ -184,28 +76,43 @@ class PresetEditor:
     def INPUT_TYPES(cls):
         return {
             "required": {
+                # Subfolder 선택 콤보박스
                 "Subfolder": (["none"],),
+                # 로라 파일 선택 콤보박스
                 "Select LoRA": (["none"],),
+                # 프리셋 파일 선택 콤보박스
                 "Select Preset": (["none"],),
+                # 로라 모델의 strength 값 (모델에 적용되는 strength)
                 "strength_model": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
+                # 클립 모델에 적용되는 strength 값
                 "strength_clip": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
+                # 프리셋 이름 접두사 (비어있으면 나중에 civitai의 baseModel 값을 할당)
                 "preset_name_prefix": ("STRING", {"default": ""}),
+                # 프리셋 이름 (파일명에서 확장자 제거한 값 또는 civitai model.name)
                 "preset_name": ("STRING", {"default": ""}),
+                # 양수 프롬프트 관련 값들 (P1, P2, P3)
                 "P1": ("STRING", {"multiline": True, "default": ""}),
                 "P2": ("STRING", {"multiline": True, "default": ""}),
                 "P3": ("STRING", {"multiline": True, "default": ""}),
+                # 음수 프롬프트 관련 값들 (N1, N2, N3)
                 "N1": ("STRING", {"multiline": True, "default": ""}),
                 "N2": ("STRING", {"multiline": True, "default": ""}),
                 "N3": ("STRING", {"multiline": True, "default": ""}),
+                # Load From Preset 버튼 (JS에서 동작하여 프리셋 JSON을 불러옴)
                 "Load From Preset": ("BOOLEAN", {"default": False}),
+                # Load From Civitai 버튼 (JS에서 동작하여 civitai 데이터를 가져옴)
                 "Load From Civitai": ("BOOLEAN", {"default": False}),
+                # Save JSON 버튼 (프리셋 데이터를 저장)
                 "Save JSON": ("BOOLEAN", {"default": False}),
+                # Refresh 버튼 (서브폴더 목록을 갱신)
                 "Refresh": ("BOOLEAN", {"default": False}),
+                # 결과 출력을 위한 위젯
                 "Result": ("STRING", {"multiline": True, "default": ""}),
             },
             "optional": {},
         }
 
+    # 노드 실행 결과는 문자열 하나를 리턴함
     RETURN_TYPES = ("STRING",)
     FUNCTION = "process"
 
@@ -218,67 +125,24 @@ class PresetEditor:
         Select_Preset,
         strength_model,
         strength_clip,
-        preset_name_suffix,
+        preset_name_suffix,  # UI에서는 preset_name_suffix 라고 불리지만, 내부적으로는 preset_name과 결합
         preset_name,
         P1, P2, P3, N1, N2, N3,
         Load_From_Preset,
         Load_From_Civitai,
         Save_JSON
     ):
-        """이 노드는 UI에서 프리셋을 선택하고 수정하는 역할만 수행하며, 실제 실행은 하지 않음"""
-
+        """
+        이 노드는 UI에서 프리셋을 선택하고 수정하는 역할만 수행합니다.
+        실제 실행은 하지 않고, 단순히 선택된 값들을 문자열로 출력하여 결과 위젯에 반영합니다.
+        """
+        # 선택된 값들을 포맷팅하여 문자열 결과 생성
         result = f"Preset: {Subfolder}{preset_name_suffix}{preset_name}\n" \
                  f"Strength Model: {strength_model}, Strength Clip: {strength_clip}\n" \
                  f"P1: {P1}\nP2: {P2}\nP3: {P3}\n" \
                  f"N1: {N1}\nN2: {N2}\nN3: {N3}\n"
 
         return (result,)
-
-class PresetSaver:
-    @classmethod
-    def INPUT_TYPES(cls):
-        lora_files = folder_paths.get_filename_list("loras")
-        return {
-            "required": {
-                "triggered": ("BOOLEAN", {"default": False}),
-                "lora_name": (["none"] + lora_files,),
-                "strength": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
-                "clip_strength": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
-                "suffix": ("STRING", {"default": ""}),
-                "nickname": ("STRING", {"default": ""}),
-            },
-            "optional": {
-                "prompt_positive": ("STRING", {"multiline": True, "default": ""}),
-                "prompt_negative": ("STRING", {"multiline": True, "default": ""}),
-                "sub_positive": ("STRING", {"multiline": True, "default": ""}),
-                "sub_negative": ("STRING", {"multiline": True, "default": ""})
-            }
-        }
-
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "save_preset"
-    CATEGORY = "lora/preset"
-
-    def save_preset(self, triggered, lora_name, strength, clip_strength, suffix, nickname,
-                    prompt_positive="", prompt_negative="", sub_positive="", sub_negative=""):
-        if not triggered or lora_name == "none":
-            return ("LoRA preset not saved. Set 'triggered' to True and select a LoRA.",)
-
-        preset_name = os.path.splitext(lora_name)[0]
-        lora_data = {
-            "lora_name": lora_name,
-            "lora_path": os.path.join(LoraPresetHelper.get_lora_folder_path(), lora_name),
-            "strength": strength,
-            "clip_strength": clip_strength,
-            "prompt_positive": prompt_positive,
-            "prompt_negative": prompt_negative,
-            "sub_positive": sub_positive,
-            "sub_negative": sub_negative,
-        }
-
-        saved_file = LoraPresetHelper.save_preset(preset_name, lora_data, suffix, nickname)
-        return (f"LoRA preset saved to: {saved_file}",)
-
 
 """
 # ComfyUI LoRA 프리셋 관리 딕셔너리 구조
@@ -308,7 +172,7 @@ class PresetSaver:
 
 ## lora_keywards
 - 키: `{별명}_{프롬프트타입}` 형식의 키워드
-  - 프롬프트타입: P(positive), N(negative), SP(sub_positive), SN(sub_negative)
+  - 프롬프트타입: P1, P2,P3, N1,N2,N3
 - 값: 실제 프롬프트 텍스트
 - 빈 문자열이나 누락된 프롬프트는 포함하지 않음
 
@@ -321,16 +185,39 @@ class PresetSaver:
             "Anime Style LoRA",
             0.8,
             0.7,
-            ["anime_P", "anime_SP"]  # 유효한 프롬프트만 포함
+            ["anime_P1", "anime_P2"]  # 유효한 프롬프트만 포함
         ]
     },
     "lora_keywards": {
-        "anime_P": "masterpiece, best quality",
-        "anime_SP": "beautiful anime style"
+        "anime_P1": "masterpiece, best quality",
+        "anime_S2": "beautiful anime style"
     }
 }
 ```
 """
+
+import json
+
+
+# PresetSelectorV2 노드는 LoRA 프리셋 관리 딕셔너리(lora_info, lora_keywards)를 생성합니다.
+# 프리셋 JSON 구조는 아래와 같이 변경되었습니다.
+# {
+#     "lora_path": "SD1.5/enhance.safetensor",    // 하위호환: "lora_name"도 처리, 윈도우 경로 정규화
+#     "strength_model" : 1.0,                      // 하위호환: "strength"도 처리
+#     "strength_clip" : 1.0,                       // 하위호환: "clip_strength"도 처리
+#     "P1": "",                                    // 하위호환: "prompt_positive"도 처리
+#     "P2": "",                                    // 하위호환: "sub_positive"도 처리
+#     "P3": "",
+#     "N1": "",                                    // 하위호환: "prompt_negative"도 처리
+#     "N2": "",                                    // 하위호환: "sub_negative"도 처리
+#     "N3": "",
+# }
+#
+# 또한, 기존에 js에서 전달받던 복잡한 display_name 대신
+# js에서는 이제 subfolder를 포함한 preset JSON 이름(즉, preset_path)를 그대로 전달합니다.
+#
+# 참고: 여기서는 helper 함수(LoraPresetHelper.*)를 그대로 사용하되,
+#       출력된 preset_data의 키 이름(예:"P1", "P2", 등)을 기준으로 동작하도록 수정합니다.
 
 class PresetSelectorV2:
     all_subfolders = []
@@ -338,21 +225,31 @@ class PresetSelectorV2:
 
     @classmethod
     def INPUT_TYPES(cls):
+        # 최초 데이터 초기화 (노드 로드시 서브폴더 및 프리셋 목록을 채웁니다)
         if not cls.all_subfolders:
             cls.initialize_data()
 
         return {
             "required": {
+                # 사용 가능한 서브폴더 목록 (helper를 통해 초기화)
                 "subfolder": (cls.all_subfolders,),
+                # LoRA 별칭(별명) 입력. 최종 lora_info의 key로 사용됩니다.
                 "Alias": ("STRING", {"default": "lora1"}),
+                # weight(강도) 값을 덮어쓸지 여부 (True이면 입력된 strength/clip_strength 사용)
                 "override_weights": ("BOOLEAN", {"default": False}),
+                # override가 False인 경우 프리셋에 저장된 값 사용, True면 이 값을 사용
                 "strength": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                 "clip_strength": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                # bypass가 True면 프리셋 로드 작업을 건너뛰고 그대로 결과 딕셔너리를 리턴함
                 "bypass": ("BOOLEAN", {"default": False}),
+                # refresh가 True면 내부 데이터(서브폴더/프리셋 목록)를 갱신함
                 "refresh": ("BOOLEAN", {"default": False}),
-                "output_loras": ("STRING", {"default": "[]"})  # JSON string of display_names
+                # output_loras: js에서 할당한 preset json 이름(이제 subfolder 포함 preset json 이름)
+                # JSON 형식의 문자열 예: '["SD1.5/my_preset.json"]'
+                "output_loras": ("STRING", {"default": "[]"})
             },
             "optional": {
+                # 기존 딕셔너리를 전달받으면 그대로 사용, 없으면 새로 생성
                 "input_lora_dict": ("DICT",)
             }
         }
@@ -364,13 +261,15 @@ class PresetSelectorV2:
 
     @classmethod
     def initialize_data(cls):
-        """Initialize all data when node is loaded"""
+        """노드가 로드될 때 서브폴더와 프리셋 목록을 초기화합니다."""
         cls.all_subfolders = LoraPresetHelper.get_subfolder_list()
         cls.all_presets = LoraPresetHelper.list_presets()
+        # cls.all_presets는 원래 (preset_path, display_name) 튜플 리스트였으나,
+        # 이제 display_name은 사용되지 않고 preset_path(즉, subfolder를 포함한 프리셋 JSON 이름)가 전달됩니다.
 
     @classmethod
     def update_data(cls):
-        """Update data method"""
+        """데이터 갱신 함수 (노드 외부에서 호출할 수 있음)"""
         cls.initialize_data()
         return {
             "subfolders": cls.all_subfolders,
@@ -382,64 +281,93 @@ class PresetSelectorV2:
 
     def select_preset(self, subfolder, Alias, override_weights, strength, clip_strength,
                       bypass, refresh, output_loras, input_lora_dict=None):
-        """Select preset and return restructured lora dictionary"""
+        """
+        프리셋을 선택하여 LoRA 관리 딕셔너리(lora_info, lora_keywards)를 생성합니다.
+
+        - bypass가 True이면 작업을 건너뛰고 그대로 결과 딕셔너리를 반환합니다.
+        - output_loras는 js에서 전달한 preset json 이름(이제 subfolder를 포함한 preset json 이름)입니다.
+        - 프리셋 JSON에서 새 구조에 따라 lora_path, strength_model, strength_clip, P1, P2, P3, N1, N2, N3 키를 사용합니다.
+        - 유효한 프롬프트 텍스트(P1~N3)가 있으면 해당 키워드를 lora_keywards 딕셔너리에 저장하고, 그 키 목록을 lora_info에도 저장합니다.
+        """
+        # refresh가 True면 데이터 갱신
         if refresh:
             self.update_data()
 
+        # input_lora_dict가 이미 전달되었으면 그대로 사용, 없으면 새 딕셔너리 생성
         if input_lora_dict:
             result = input_lora_dict
-        else :
+        else:
             result = {
                 "lora_info": {},
                 "lora_keywards": {}
             }
 
+        # bypass가 True이면 바로 결과를 반환합니다.
         if bypass:
             return (result,)
 
         try:
+            # output_loras는 이제 preset json 이름(서브폴더 포함)이 담긴 JSON 문자열입니다.
             display_names = json.loads(output_loras)
             if not display_names:
                 return (result,)
 
-            display_name = display_names[0]
-            preset_path = next((path for path, name in self.all_presets if name == display_name), None)
-
-            if preset_path is None:
-                print(f"Warning: No matching preset found for display_name: {display_name}")
-                return (result,)
-
+            # 이제 첫 번째 요소가 preset_path (즉, subfolder 포함 preset json 이름)
+            preset_path = display_names[0]
+            # preset_path를 기반으로 프리셋 데이터를 로드합니다.
             preset_data = LoraPresetHelper.load_preset_data().get(preset_path)
             if preset_data is None:
                 print(f"Warning: No preset data found for: {preset_path}")
                 return (result,)
 
-            # 새로운 lora 엔트리 생성
+            # 새로운 LoRA 엔트리 생성
+            # 프리셋 데이터에서 lora_path, strength_model, strength_clip 값을 추출합니다.
+            # 하위호환 처리를 위해 "lora_path" 없으면 "lora_name"을, "strength_model" 없으면 "strength"를, "strength_clip" 없으면 "clip_strength"를 사용합니다.
+            lora_path = preset_data.get("lora_path") or preset_data.get("lora_name", "")
+            preset_strength = preset_data.get("strength_model") or preset_data.get("strength", 1.0)
+            preset_clip_strength = preset_data.get("strength_clip") or preset_data.get("clip_strength", 1.0)
+
+            # 만약 override_weights가 True이면 입력된 strength, clip_strength 사용
+            final_strength = strength if override_weights else preset_strength
+            final_clip_strength = clip_strength if override_weights else preset_clip_strength
+
+            # 프롬프트 키워드를 저장할 리스트 (lora_info의 5번째 요소)
             prompt_keys = []
+
+            # lora_info의 두 번째 요소(표시명)는 더 이상 별도의 display_name이 없으므로, preset_path를 그대로 사용합니다.
             result["lora_info"][Alias] = [
-                preset_path,
-                display_name,
-                strength if override_weights else preset_data.get("strength", 1.0),
-                clip_strength if override_weights else preset_data.get("clip_strength", 1.0),
-                prompt_keys
+                lora_path,  # 파일 경로
+                preset_path,  # 표시명 대신 preset_path 사용
+                final_strength,  # 적용 강도
+                final_clip_strength,  # 클립 강도
+                prompt_keys  # 유효 프롬프트 키워드 목록 (나중에 추가)
             ]
 
-            # 유효한 프롬프트 검사 및 저장
-            if p := preset_data.get("prompt_positive"):
-                prompt_keys.append(f"{Alias}_P")
-                result["lora_keywards"][f"{Alias}_P"] = p
+            # 프리셋 JSON에서 프롬프트 텍스트를 추출합니다.
+            # 새 구조에 따라 키는 "P1", "P2", "P3", "N1", "N2", "N3" 입니다.
+            if p1 := preset_data.get("P1"):
+                prompt_keys.append(f"{Alias}_P1")
+                result["lora_keywards"][f"{Alias}_P1"] = p1
 
-            if n := preset_data.get("prompt_negative"):
-                prompt_keys.append(f"{Alias}_N")
-                result["lora_keywards"][f"{Alias}_N"] = n
+            if p2 := preset_data.get("P2"):
+                prompt_keys.append(f"{Alias}_P2")
+                result["lora_keywards"][f"{Alias}_P2"] = p2
 
-            if sp := preset_data.get("sub_positive"):
-                prompt_keys.append(f"{Alias}_SP")
-                result["lora_keywards"][f"{Alias}_SP"] = sp
+            if p3 := preset_data.get("P3"):
+                prompt_keys.append(f"{Alias}_P3")
+                result["lora_keywards"][f"{Alias}_P3"] = p3
 
-            if sn := preset_data.get("sub_negative"):
-                prompt_keys.append(f"{Alias}_SN")
-                result["lora_keywards"][f"{Alias}_SN"] = sn
+            if n1 := preset_data.get("N1"):
+                prompt_keys.append(f"{Alias}_N1")
+                result["lora_keywards"][f"{Alias}_N1"] = n1
+
+            if n2 := preset_data.get("N2"):
+                prompt_keys.append(f"{Alias}_N2")
+                result["lora_keywards"][f"{Alias}_N2"] = n2
+
+            if n3 := preset_data.get("N3"):
+                prompt_keys.append(f"{Alias}_N3")
+                result["lora_keywards"][f"{Alias}_N3"] = n3
 
             return (result,)
 
@@ -452,5 +380,6 @@ class PresetSelectorV2:
 
     @classmethod
     def IS_CHANGED(cls, **kwargs):
+        # 데이터 갱신 여부를 판단하기 위해 항상 True를 반환합니다.
         cls.initialize_data()
         return True

@@ -1,4 +1,4 @@
-// 📌 파일: extensions/utils/eugene_utils.js
+// 📌 파일: extensions/eugene_utils.js
 import { api } from "../../scripts/api.js";
 import { app } from "../../scripts/app.js";
 import * as utils from "./utils.js";  // 📌 utils.js도 통합 가져오기
