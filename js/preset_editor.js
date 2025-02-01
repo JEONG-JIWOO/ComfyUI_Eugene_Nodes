@@ -29,6 +29,12 @@ app.registerExtension({
                 loraWidget.callback = () => eugeneUtils.handleLoraSelection(this);
             }
 
+            // 📌 "Select Preset" 위젯에 콜백 연결 (선택 시 JSON 데이터 로드)
+            const presetWidget = utils.getWidget(this, "Select Preset");
+            if (presetWidget) {
+                presetWidget.callback = () => eugeneUtils.handlePresetSelection(this);
+            }
+
             // 📌 "Refresh" 버튼 콜백 연결
             const refreshButton = utils.getWidget(this, "Refresh");
             if (refreshButton) {

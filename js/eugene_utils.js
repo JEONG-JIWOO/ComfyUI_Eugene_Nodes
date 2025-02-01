@@ -104,3 +104,96 @@ export async function updateLoraAndPresetList(node, subfolder) {
         console.error("[PresetEditor] Failed to update LoRA & Preset lists:", error);
     }
 }
+
+/**
+ * 📌 "Select Preset" 선택 시 해당 프리셋 정보를 API에서 가져와 위젯에 할당하는 함수
+ * @param {object} node - PresetEditor 노드 객체
+ */
+export async function handlePresetSelection(node) {
+    try {
+        //console.log("[PresetEditor] Preset selected - Loading JSON data...");
+
+        // 📌 "Select Preset"과 "Preset Name Suffix" 위젯 찾기
+        const subfolderWidget = utils.getWidget(node, "Subfolder");
+        const presetWidget = utils.getWidget(node, "Select Preset");
+        const prefixWidget = utils.getWidget(node, "preset_name_prefix");
+        const presetNameWidget = utils.getWidget(node, "preset_name");
+        if (!presetWidget || !presetNameWidget) return;
+
+        const selectedPreset = presetWidget.value;
+        if (!selectedPreset || selectedPreset === "none") {
+            console.log("[PresetEditor] No preset selected.");
+            return;
+        }
+
+        // 📌 API 호출하여 JSON 데이터 가져오기
+        const preset_path = `${subfolderWidget.value}/${selectedPreset}`
+        const response = await api.fetchApi(`/lora/json?path=${encodeURIComponent(preset_path)}`);
+        if (!response.ok) throw new Error("Failed to fetch preset JSON data");
+
+        const data = await response.json();
+        console.log("[PresetEditor] Loaded JSON Data:", data);
+
+        // 📌 하위 호환 처리 (필드 매핑)
+        const fieldMapping = {
+            "lora_path": ["lora_path", "lora_name"],
+            "strength_model": ["strength_model", "strength"],
+            "strength_clip": ["strength_clip", "clip_strength"],
+            "P1": ["P1", "prompt_positive"],
+            "P2": ["P2", "sub_positive"],
+            "P3": ["P3"],
+            "N1": ["N1", "prompt_negative"],
+            "N2": ["N2", "sub_negative"],
+            "N3": ["N3"]
+        };
+
+        // 📌 위젯에 값 설정
+        Object.entries(fieldMapping).forEach(([widgetName, jsonKeys]) => {
+            const widget = utils.getWidget(node, widgetName);
+            if (!widget) return;
+
+            for (const key of jsonKeys) {
+                if (data[key] !== undefined) {
+                    widget.value = data[key];
+                    break; // 첫 번째 유효한 값이 있으면 사용
+                }
+            }
+        });
+
+
+        // 📌 Windows 경로 정규화 (`\` → `/`)
+        const loraWidget = utils.getWidget(node, "Select LoRA");
+        let loraPath = (data.lora_path || data.lora_name || "").replace(/\\/g, "/");
+        // 📌 subfolder 제외 (loraWidget.options.values은 subfolder 제외한 값)
+        let loraFileName = loraPath.split("/").pop(); // 파일명만 추출
+        // 📌 combobox에 있는 값이면 선택, 없으면 "none"
+        if (loraWidget.options.values.includes(loraFileName)) {
+            loraWidget.value = loraFileName; // combobox 값으로 설정
+        } else {
+            console.warn("[PresetEditor] LoRA file not found in options, setting to 'none'.");
+            loraWidget.value = "none"; // 유효하지 않으면 "none" 설정
+        }
+
+        // 📌 "preset_name" 설정 (하위호환 고려)
+        let presetName = selectedPreset.replace(".json", ""); // 기본적으로 파일 이름에서 확장자 제거
+
+        if (data.nickname && typeof data.nickname === "string" && data.nickname.trim().length > 0) {
+            presetName = data.nickname; // nickname 필드가 있으면 우선 사용
+        }
+
+        // 📌 Prefix 제거 (있는 경우)
+        if (prefixWidget && prefixWidget.value && presetName.startsWith(prefixWidget.value)) {
+            presetName = presetName.slice(prefixWidget.value.length); // prefix 부분 제거
+        }
+
+        presetNameWidget.value = presetName; // 최종 preset_name 설정
+
+        // 📌 UI 업데이트 반영
+        app.graph.setDirtyCanvas(true);
+        utils.customPrint(node, "Success", `Load Json : ${data}`);
+
+    } catch (error) {
+        console.error("[PresetEditor] Failed to load preset:", error);
+        utils.customPrint(node, "ERROR", error.message);
+    }
+}

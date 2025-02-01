@@ -24,7 +24,7 @@ Preset Editor
 4. "strength_model": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
 5. "strength_clip": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
 
-6. "preset_name_suffix": ("STRING", {"default": ""}),
+6. "preset_name_prefix": ("STRING", {"default": ""}),
 7. "preset_name" : ("STRING", {"default": ""}),
 8.  "P1": ("STRING", {"multiline": True, "default": ""}),
 9.  "P2": ("STRING", {"multiline": True, "default": ""}),
@@ -39,6 +39,23 @@ Preset Editor
 17. result : ("STRING", {"multiline": True, "default": ""})
 
 Python 상에서 실행시 동작 및 리턴 : 없음. 
+
+
+'''
+preset json 구조 
+{
+    "lora_path": "SD1.5/enhance.safetensor",    // 하위호환으로 key가 "lora_name" 인 경우도 처리, windows 경로 정규화도 한번더 처리 
+    "strength_model" : 1.0,                     // 하위호환으로 key가 "strength" 인 경우도 처리
+    "strength_clip" : 1.0,                      // 하위호환으로 key가 "clip_strength" 인 경우도 처리
+    "P1": "",                                   // 하위호환으로 key가 "prompt_positive" 인 경우도 처리
+    "P2": "",                                   // 하위호환으로 key가 "sub_positive" 인 경우도 처리
+    "P3": "",                                   
+    "N1": "",                                   // 하위호환으로 key가 "prompt_negative" 인 경우도 처리
+    "N2": "",                                   // 하위호환으로 key가 "sub_negative" 인 경우도 처리
+    "N3": "",                                  
+}
+'''
+
 """
 
 class PresetEditor:
@@ -51,7 +68,7 @@ class PresetEditor:
                 "Select Preset": (["none"],),
                 "strength_model": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
                 "strength_clip": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
-                "preset_name_suffix": ("STRING", {"default": ""}),
+                "preset_name_prefix": ("STRING", {"default": ""}),
                 "preset_name": ("STRING", {"default": ""}),
                 "P1": ("STRING", {"multiline": True, "default": ""}),
                 "P2": ("STRING", {"multiline": True, "default": ""}),
@@ -89,8 +106,7 @@ class PresetEditor:
     ):
         """이 노드는 UI에서 프리셋을 선택하고 수정하는 역할만 수행하며, 실제 실행은 하지 않음"""
 
-        result = f"Preset: {preset_name}\n" \
-                 f"Suffix: {preset_name_suffix}\n" \
+        result = f"Preset: {Subfolder}{preset_name_suffix}{preset_name}\n" \
                  f"Strength Model: {strength_model}, Strength Clip: {strength_clip}\n" \
                  f"P1: {P1}\nP2: {P2}\nP3: {P3}\n" \
                  f"N1: {N1}\nN2: {N2}\nN3: {N3}\n"
