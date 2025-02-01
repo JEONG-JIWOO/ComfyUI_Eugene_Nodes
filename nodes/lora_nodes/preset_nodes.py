@@ -244,8 +244,6 @@ class PresetSelectorV2:
                 "clip_strength": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                 # bypass가 True면 프리셋 로드 작업을 건너뛰고 그대로 결과 딕셔너리를 리턴함
                 "bypass": ("BOOLEAN", {"default": False}),
-                # refresh가 True면 내부 데이터(서브폴더/프리셋 목록)를 갱신함
-                "Refresh": ("BOOLEAN", {"default": False}),
                 # output_loras: js에서 할당한 preset json 파일 이름
                 # JSON 형식의 문자열 예: 'SD1.5/my_preset.json'
                 "SelectedPreset": ("STRING", {"default": ""})
@@ -254,6 +252,7 @@ class PresetSelectorV2:
                 # 기존 딕셔너리를 전달받으면 그대로 사용, 없으면 새로 생성
                 "input_lora_dict": ("DICT",),
                 "Result": ("STRING", {"multiline": True, "default": ""}),
+                "Refresh": ("BOOLEAN", {"default": False}),
             }
         }
 
@@ -263,7 +262,7 @@ class PresetSelectorV2:
     CATEGORY = "lora/preset"
 
     def select_preset(self, subfolder, Alias, override_weights, strength, clip_strength,
-                      bypass, Refresh, SelectedPreset, input_lora_dict=None,Result=""):
+                      bypass, SelectedPreset, input_lora_dict=None,Result="",Refresh=False):
         """
         프리셋을 선택하여 LoRA 관리 딕셔너리(lora_info, lora_keywards)를 생성합니다.
 

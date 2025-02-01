@@ -52,6 +52,8 @@ app.registerExtension({
       setTimeout(() => {
         presetSelectorUtils.restoreSubfolderValue(this);
         presetSelectorUtils.updateWidgets(this, subfolderWidget.value, true);
+        this.graph.setDirtyCanvas(true);
+        app.graph.setDirtyCanvas(true);
       }, 1000);
     };
 
