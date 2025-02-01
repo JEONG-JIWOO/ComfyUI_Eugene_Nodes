@@ -36,10 +36,22 @@ app.registerExtension({
                 presetWidget.callback = () => eugeneUtils.handlePresetSelection(this);
             }
 
+             // 📌 "Load From Preset" 버튼 콜백 연결
+            const  presetButton = utils.getWidget(this, "Load From Preset");
+            if (presetButton) {
+                presetButton.callback = () => eugeneUtils.handlePresetSelection(this);
+            }
+
              // 📌 "Load From civitai" 버튼 콜백 연결
             const civitaiButton = utils.getWidget(this, "Load From Civitai");
             if (civitaiButton) {
                 civitaiButton.callback = () => eugeneUtils.handleCivitaiSelection(this);
+            }
+
+            // 📌 Save JSON 버튼에 콜백 연결
+            const saveJSONWidget = utils.getWidget(this, "Save JSON");
+            if (saveJSONWidget) {
+                saveJSONWidget.callback = () => eugeneUtils.savePresetJson(this);
             }
 
             // 📌 "Refresh" 버튼 콜백 연결
@@ -48,6 +60,7 @@ app.registerExtension({
                 refreshButton.callback = () => eugeneUtils.refreshSubfolderList(this);
             }
 
+            // 📌 Civitai 링크 커스텀 하이퍼링크 추가.
             this.widgets.push(createHyperlinkWidget({
                name: "CivitaiLinkButton",
                defaultUrl: "", // 초기에는 빈 문자열로 시작

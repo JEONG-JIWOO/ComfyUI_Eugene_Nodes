@@ -44,6 +44,8 @@ export async function refreshSubfolderList(node) {
 
         app.graph.setDirtyCanvas(true);  // UI 업데이트
 
+        updateLoraAndPresetList(node,subfolderWidget.value);
+
     } catch (error) {
         console.error("[PresetEditor] Failed to refresh subfolders:", error);
         utils.customPrint(node, "ERROR", error.message);
@@ -153,9 +155,14 @@ export async function handlePresetSelection(node) {
             if (!widget) return;
 
             for (const key of jsonKeys) {
-                if (data[key] !== undefined) {
-                    widget.value = data[key];
-                    break; // 첫 번째 유효한 값이 있으면 사용
+                try{
+                    if (data[key] !== undefined) {
+                        widget.value = data[key];
+                        break; // 첫 번째 유효한 값이 있으면 사용
+                    }
+                }
+                catch (error) {
+
                 }
             }
         });
@@ -187,6 +194,12 @@ export async function handlePresetSelection(node) {
         }
 
         presetNameWidget.value = presetName; // 최종 preset_name 설정
+
+        // load from preset 버튼 비활성화
+        const presetButton = utils.getWidget(node, "Load From Preset");
+        if (presetButton) {
+           presetButton.value = false;
+        }
 
         // 📌 UI 업데이트 반영
         app.graph.setDirtyCanvas(true);
@@ -300,6 +313,81 @@ export async function handleCivitaiSelection(node) {
         app.graph.setDirtyCanvas(true);
     } catch (error) {
         console.error("[PresetEditor] Failed to load civitai data:", error);
+        utils.customPrint(node, "ERROR", error.message);
+    }
+}
+
+/**
+ * 📌 Save JSON 위젯 클릭 시 프리셋 JSON 데이터를 API를 통해 저장하는 함수
+ * @param {object} node - PresetEditor 노드 객체
+ */
+export async function savePresetJson(node) {
+    try {
+        // 필요한 위젯 가져오기
+        const subfolderWidget = utils.getWidget(node, "Subfolder");
+        const presetNamePrefixWidget = utils.getWidget(node, "preset_name_prefix");
+        const presetNameWidget = utils.getWidget(node, "preset_name");
+        const loraWidget = utils.getWidget(node, "Select LoRA");
+        const strengthModelWidget = utils.getWidget(node, "strength_model");
+        const strengthClipWidget = utils.getWidget(node, "strength_clip");
+        const P1Widget = utils.getWidget(node, "P1");
+        const P2Widget = utils.getWidget(node, "P2");
+        const P3Widget = utils.getWidget(node, "P3");
+        const N1Widget = utils.getWidget(node, "N1");
+        const N2Widget = utils.getWidget(node, "N2");
+        const N3Widget = utils.getWidget(node, "N3");
+        const saveJSONWidget = utils.getWidget(node, "Save JSON");
+
+        // 프리셋 파일 이름 구성 (예: subfolder/prefix+name.json)
+        const subfolder = subfolderWidget.value;
+        const presetNamePrefix = presetNamePrefixWidget.value;
+        const presetName = presetNameWidget.value;
+        const fileName = presetNamePrefix + presetName + ".json";
+        const presetPath = subfolder + "/" + fileName;
+
+        // JSON 데이터 구성 (필요한 필드를 프리셋 JSON 구조에 맞게 매핑)
+        const jsonData = {
+            lora_path: loraWidget.value, // 혹은 노드에 맞게 값 조정
+            strength_model: strengthModelWidget.value,
+            strength_clip: strengthClipWidget.value,
+            P1: P1Widget.value,
+            P2: P2Widget.value,
+            P3: P3Widget.value,
+            N1: N1Widget.value,
+            N2: N2Widget.value,
+            N3: N3Widget.value
+        };
+
+        // 결과 위젯에 저장 시작 로그 출력
+        utils.customPrint(node, "INFO", `Saving preset to ${presetPath}...`);
+
+        // API 호출: POST /api/lora/save_json
+        const response = await api.fetchApi("/lora/save_json", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                preset_path: presetPath,
+                data: jsonData
+            })
+        });
+
+        // 오류 처리
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to save preset JSON");
+        }
+
+        const resultData = await response.json();
+        utils.customPrint(node, "SUCCESS", `Preset saved: ${resultData.message}`);
+
+        // 저장 후 Save JSON 버튼 상태 초기화 (false)
+        if (saveJSONWidget) {
+            saveJSONWidget.value = false;
+        }
+        app.graph.setDirtyCanvas(true);
+
+    } catch (error) {
+        console.error("[PresetEditor] Failed to save preset:", error);
         utils.customPrint(node, "ERROR", error.message);
     }
 }
