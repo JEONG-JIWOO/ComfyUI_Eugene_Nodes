@@ -4,17 +4,13 @@ Provides nodes for managing and applying LoRA presets in ComfyUI
 """
 
 import os
-from .preset_nodes_old import PresetSelector, MultiPresetSelector, PresetSaver
 from .preset_nodes import  PresetSelectorV2, PresetEditor
 from .loader_nodes import AdvancedLoraLoader, ListBasedLoraLoader,ListBasedLoraLoadOnly, DictBasedLoraLoader
 from .web import setup_routes
 
 __all__ = [
     'PresetEditor',
-    'PresetSaver',
-    'PresetSelector',
     'PresetSelectorV2',
-    'MultiPresetSelector',
     'AdvancedLoraLoader',
     'ListBasedLoraLoader',
     'ListBasedLoraLoadOnly',

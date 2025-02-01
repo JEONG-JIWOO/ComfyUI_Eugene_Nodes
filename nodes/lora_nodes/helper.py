@@ -46,63 +46,13 @@ class LoraPresetHelper:
 
         for root, _, files in os.walk(lora_dir):
             for file in files:
-                if file.endswith('_preset.json'):
-                    rel_path = os.path.relpath(os.path.join(root, file), lora_dir)
-                    try:
-                        with open(os.path.join(root, file), 'r', encoding='utf-8') as f:
-                            preset_data[rel_path] = json.load(f)
-                    except json.JSONDecodeError:
-                        print(f"Error decoding JSON from {rel_path}")
-
+                rel_path = os.path.relpath(os.path.join(root, file), lora_dir)
+                try:
+                    with open(os.path.join(root, file), 'r', encoding='utf-8') as f:
+                        preset_data[rel_path] = json.load(f)
+                except json.JSONDecodeError:
+                    print(f"Error decoding JSON from {rel_path}")
         return preset_data
-
-    @classmethod
-    def get_subfolder_list(cls):
-        """
-        Returns a list of all subfolders in the LoRA directory.
-        Includes the root folder.
-        """
-        lora_dir = cls.get_lora_folder_path()
-        subfolders = {"root"}
-
-        for root, dirs, _ in os.walk(lora_dir):
-            for dir_name in dirs:
-                rel_path = os.path.relpath(os.path.join(root, dir_name), lora_dir)
-                subfolders.add(rel_path)
-
-        return sorted(list(subfolders))
-
-    @classmethod
-    def get_preset_list(cls, subfolder):
-        """
-        Returns a list of presets in the specified subfolder.
-        Returns root folder presets if subfolder is 'root'.
-        """
-        all_presets = cls.list_presets()
-
-        if subfolder == "root":
-            return [preset[1] for preset in all_presets
-                    if preset[0] == "none" or "/" not in preset[0].replace("\\", "/")]
-        else:
-            subfolder_path = subfolder.replace("\\", "/")
-            return [preset[1] for preset in all_presets
-                    if preset[0] == "none" or
-                    preset[0].replace("\\", "/").startswith(subfolder_path + "/")]
-
-    @staticmethod
-    def save_preset(preset_name, lora_data, suffix="", nickname=None):
-        """Saves a LoRA preset."""
-        lora_dir = LoraPresetHelper.get_lora_folder_path()
-        file_name = f"{preset_name}{suffix}_preset.json"
-        file_path = os.path.join(lora_dir, file_name)
-
-        if nickname:
-            lora_data["nickname"] = nickname
-
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(lora_data, f, ensure_ascii=False, indent=4)
-
-        return file_path
 
     @staticmethod
     def clean_prompt(prompt):

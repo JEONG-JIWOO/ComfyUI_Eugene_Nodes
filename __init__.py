@@ -21,11 +21,8 @@ from .nodes.dictionary_bus import (
 )
 
 from .nodes.lora_nodes import (
-    PresetSaver,
     PresetEditor,
-    PresetSelector,
     PresetSelectorV2,
-    MultiPresetSelector,
     AdvancedLoraLoader,
     ListBasedLoraLoader,
     ListBasedLoraLoadOnly,
@@ -49,10 +46,7 @@ NODE_CLASS_MAPPINGS = {
 
     # LoRA Nodes
     "PresetEditor" : PresetEditor,
-    "LoraPresetSaver": PresetSaver,
-    "LoraPresetSelector": PresetSelector,
     "LoraPresetSelectorV2": PresetSelectorV2,
-    "LoraMultiPresetSelector":MultiPresetSelector,
     "LoraPresetLoader": AdvancedLoraLoader,
     "LoraPresetListLoader": ListBasedLoraLoader,
     "ListBasedLoraLoadOnly": ListBasedLoraLoadOnly,
@@ -76,10 +70,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 
     # LoRA Nodes
     "PresetEditor" : "Preset Editor",
-    "LoraPresetSaver": "LoRA Preset Saver",
-    "LoraPresetSelector": "LoRA Preset Selector",
     "LoraPresetSelectorV2" : "LoRA Preset Selector V2, DICT",
-    "LoraMultiPresetSelector": "LoRA Multi Selector",
     "LoraPresetLoader": "LoRA Preset Loader & Encoder",
     "LoraPresetListLoader": "LoRA Preset List Loader & Encoder",
     "ListBasedLoraLoadOnly" : "LoRA Preset List Loader Only",
