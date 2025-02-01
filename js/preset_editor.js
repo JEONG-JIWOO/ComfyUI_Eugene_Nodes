@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import * as utils from "./utils.js";  // 📌 utils.js도 통합 가져오기
-import * as eugeneUtils from "./eugene_utils.js";  // 📌 모든 함수 통합 가져오기
+import * as eugeneUtils from "./preset_editor_utils.js";  // 📌 모든 함수 통합 가져오기
 import {createHyperlinkWidget} from "./custom_widget.js";  // 📌 모든 함수 통합 가져오기
 
 app.registerExtension({

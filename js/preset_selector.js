@@ -1,182 +1,94 @@
 import { app } from "../../scripts/app.js";
-import { api } from "../../scripts/api.js";
+import * as utils from "./utils.js";               // 공통 유틸 (getWidget, customPrint 등)
+import { createComboToggleWidget } from "./custom_widget.js";
+import * as presetSelectorUtils from "./preset_selector_utils.js"; // 모든 로직은 이 파일에서 처리
 
+// PresetSelectorV2 노드 등록
 app.registerExtension({
-  name: "LoraPresetSelector.extension",
+  name: "PresetSelectorV2.extension",
 
   async beforeRegisterNodeDef(nodeType, nodeData, app) {
-    // LoraPresetSelector 노드에만 적용
-    if (nodeType.comfyClass !== "LoraPresetSelector") {
-      return;
-    }
+    // 노드 타입이 "LoraPresetSelectorV2" 인 경우에만 처리
+    if (nodeType.comfyClass !== "LoraPresetSelectorV2") return;
 
-    let cachedPresets = null;
-
-    /**
-     * /lora_presets/refresh -> 프리셋 갱신
-     */
-    async function refreshPresets() {
-      try {
-        const response = await api.fetchApi("/lora_presets/refresh");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        if (!data || !data.presets) {
-          throw new Error("[LoraPresetSelector] Invalid response format");
-        }
-        cachedPresets = data.presets;
-        console.log("[LoraPresetSelector] Refreshed presets:", cachedPresets);
-        return data;
-      } catch (error) {
-        console.error("[LoraPresetSelector] Failed to refresh presets:", error);
-        return null;
-      }
-    }
-
-    /**
-     * /lora_presets -> 프리셋 목록 (캐시)
-     */
-    async function getPresets() {
-      if (cachedPresets) return cachedPresets;
-      try {
-        const response = await api.fetchApi("/lora_presets");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        if (!data || !data.presets) {
-          throw new Error("[LoraPresetSelector] Invalid response format");
-        }
-        cachedPresets = data.presets;
-        console.log("[LoraPresetSelector] All presets from server:", cachedPresets);
-        return cachedPresets;
-      } catch (error) {
-        console.error("[LoraPresetSelector] Failed to fetch presets:", error);
-        return [];
-      }
-    }
-
-    /**
-     * 단순히 UI에 표시할 목록을 만드는 정도로만 사용.
-     * (유효성 체크를 원치 않으므로, "목록에 없으면 none" 같은 처리는 하지 않음)
-     */
-    function filterPresets(allPresets, subfolder) {
-      // 여기서는 간단히 "subfolder"에 맞춰 경로를 골라낼 뿐,
-      // 최종 preset 값 덮어쓰지 않음
-      if (!Array.isArray(allPresets)) return [];
-      const normalizedSub = subfolder.replace(/\\/g, "/");
-
-      return allPresets.filter((preset) => {
-        if (!preset || preset.path === "none") return true;
-        const normPath = preset.path.replace(/\\/g, "/");
-        if (normalizedSub === "root") {
-          // root: 슬래시 1회 이하
-          return normPath.split("/").length <= 2;
-        }
-        return normPath.startsWith(normalizedSub + "/");
-      });
-    }
-
-    // 기존 onNodeCreated 백업
     const origOnNodeCreated = nodeType.prototype.onNodeCreated;
-
-    // 새 onNodeCreated
     nodeType.prototype.onNodeCreated = async function () {
       if (origOnNodeCreated) {
         origOnNodeCreated.apply(this, arguments);
       }
 
-      // 워크플로우 로드 시점에 담기는 데이터
-      const savedData = this.data ?? this.properties ?? nodeData ?? {};
-      console.log("[LoraPresetSelector] onNodeCreated -> savedData:", savedData);
+      // 필수 위젯 (subfolder, refresh, bypass) 찾기
+      const subfolderWidget = utils.getWidget(this, "subfolder");
+      const refreshWidget = utils.getWidget(this, "Refresh"); // Refresh 위젯 이름: "Refresh"
+      const bypassWidget = utils.getWidget(this, "bypass");
 
-      // 위젯 찾기
-      const subfolderWidget = this.widgets.find(w => w.name === "subfolder");
-      const presetWidget = this.widgets.find(w => w.name === "preset");
-      const refreshWidget = this.widgets.find(w => w.name === "refresh");
-
-      if (!subfolderWidget || !presetWidget) {
-        console.warn("[LoraPresetSelector] Required widgets not found!");
+      if (!subfolderWidget || !refreshWidget || !bypassWidget) {
+        console.error("[PresetSelectorV2] Required widgets not found!");
         return;
       }
 
-      // refresh
-      if (refreshWidget) {
-        refreshWidget.callback = async () => {
-          if (refreshWidget.value) {
-            console.log("[LoraPresetSelector] Refreshing presets...");
-            const data = await refreshPresets();
-            if (data) {
-              cachedPresets = null;
-              // subfolder 콜백 재실행
-              await subfolderWidget.callback();
-            }
-            refreshWidget.value = false;
-            app.graph.setDirtyCanvas(true);
-          }
-        };
-      }
-
-      // 사용자 직접 preset 변경 -> 저장
-      presetWidget.callback = () => {
-        const newPreset = presetWidget.value;
-        console.log("[LoraPresetSelector] User changed preset to:", newPreset);
-
-        // 노드 이름 변경
-        if (newPreset && typeof newPreset === "string" && newPreset !== "none") {
-          this.title = newPreset; // 노드 이름 변경
-          console.log("[LoraPresetSelector] Node title updated to:", newPreset);
-        }
-
-        // 워크플로우 저장
-        app.graph.setDirtyCanvas(true);
-      };
-
-
-      // subfolder 변경 콜백
-      // (필터 목록을 UI에 표시하기만 하고,
-      //  지금은 "유효성 체크"를 안 해서 기존 preset을 덮어쓰지 않음)
-      const origSubfolderCallback = subfolderWidget.callback;
+      // 서브폴더 선택 시, 노드 제목 업데이트 및 위젯 갱신 (custom 위젯 이름에는 subfolder 정보 제외)
       subfolderWidget.callback = async () => {
-        if (typeof origSubfolderCallback === "function") {
-          origSubfolderCallback.call(subfolderWidget);
-        }
+        this.title = `Group: ${subfolderWidget.value}`;
+        await presetSelectorUtils.updateWidgets(this, subfolderWidget.value, false);
+      };
 
-        const subfolder = subfolderWidget.value;
-        console.log("[LoraPresetSelector] Subfolder changed ->", subfolder);
-
-        // UI용 목록만 업데이트
-        const all = await getPresets();
-        const filtered = filterPresets(all, subfolder);
-        const presetNames = filtered.map(p => p.display_name || "none");
-
-        // 중복제거 + "none"을 맨 앞에 추가 (UI 표시용)
-        const finalList = Array.from(new Set(["none", ...presetNames]));
-
-        // 콤보 목록 갱신
-        presetWidget.options.values = finalList;
-        // ★ 기존에 선택된 presetWidget.value를 **절대 덮어쓰지 않음**
-        // -> "유효성 체크" 없이 그냥 둠
-
+      // "Refresh" 버튼 콜백: /lora/list 엔드포인트를 통해 subfolder 위젯의 value와 options를 업데이트
+      refreshWidget.callback = async () => {
+        await presetSelectorUtils.refreshSubfolderList(this);
         app.graph.setDirtyCanvas(true);
       };
 
-      // (1) **저장된 subfolder** 가 있으면 무조건 덮어씀
-      const savedSubfolder = savedData.properties?.subfolder;
-      if (savedSubfolder !== undefined) {
-        console.log("[LoraPresetSelector] Force set subfolder to saved:", savedSubfolder);
-        subfolderWidget.value = savedSubfolder;
-      }
-      // (2) **저장된 preset** 이 있으면 무조건 덮어씀
-      const savedPreset = savedData.properties?.preset;
-      if (savedPreset !== undefined) {
-        console.log("[LoraPresetSelector] Force set preset to saved:", savedPreset);
-        presetWidget.value = savedPreset;
-      }
+      // bypass 위젯 콜백: bypass 상태에 따라 custom 위젯들 활성/비활성화
+      bypassWidget.callback = () => {
+        presetSelectorUtils.setBypassState(this, bypassWidget.value);
+      };
 
-      // subfolder 콜백 1회 호출 -> UI 목록만 업데이트하고, 현재 preset은 그대로 둠
-      await subfolderWidget.callback();
+      // 초기 위젯 업데이트: /lora/list를 통해 서브폴더 옵션과 프리셋 목록을 가져와 갱신
+      await presetSelectorUtils.updateWidgets(this, subfolderWidget.value, true);
+      app.graph.setDirtyCanvas(true);
+
+      // 그래프 로드 완료 후, 일정 시간 지연(1초) 후 복원 시도
+      setTimeout(() => {
+        presetSelectorUtils.restoreSubfolderValue(this);
+        presetSelectorUtils.updateWidgets(this, subfolderWidget.value, true);
+        this.graph.setDirtyCanvas(true);
+        app.graph.setDirtyCanvas(true);
+      }, 1000);
+    };
+
+    // serialize: 위젯 값과 custom 위젯 상태 저장
+    const origSerialize = nodeType.prototype.serialize;
+    nodeType.prototype.serialize = function () {
+      const data = origSerialize ? origSerialize.apply(this) : {};
+      data.widgets_values = this.widgets.map(w => w.value);
+      data.custom_widget_states = this.widgets
+        .filter(w => w.type === "custom")
+        .map(w => ({
+          value: w.value,
+          isActive: w.isActive
+        }));
+      return data;
+    };
+
+    // configure: 저장된 위젯 상태 복원
+    const origConfigure = nodeType.prototype.configure;
+    nodeType.prototype.configure = function (info) {
+      if (origConfigure) {
+        origConfigure.apply(this, arguments);
+      }
+      if (info.widgets_values) {
+        this.widgets_values = info.widgets_values;
+      }
+      if (info.custom_widget_states) {
+        const customWidgets = this.widgets.filter(w => w.type === "custom");
+        info.custom_widget_states.forEach((state, index) => {
+          if (customWidgets[index]) {
+            customWidgets[index].value = state.value;
+            customWidgets[index].isActive = state.isActive;
+          }
+        });
+      }
     };
   }
 });

@@ -1,7 +1,7 @@
 import { api } from "../../scripts/api.js";
 import { app } from "../../scripts/app.js";
 import * as utils from "./utils.js";
-import { createComboToggleWidget } from "./custom_combobox.js";
+import { createComboToggleWidget } from "./custom_widget.js";
 
 /**
  * 서브폴더 위젯의 값을 복원합니다.
