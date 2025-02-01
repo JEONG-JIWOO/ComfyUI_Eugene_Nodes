@@ -9,7 +9,95 @@ import json
 from .helper import LoraPresetHelper
 
 
-class SinglePresetSaver:
+"""
+Preset Editor
+
+1. Subfolder : String List combobox
+- 일단 ["none"] 만 들어가있고 추후 js를 통해 동적으로 업데이트 
+
+2. select lora : ["none"]
+- 일단 ["none"] 만 들어가있고 추후 js를 통해 동적으로 업데이트 
+
+3. select preset : 
+- 일단 ["none"] 만 들어가있고 추후 js를 통해 동적으로 업데이트 
+
+4. "strength_model": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
+5. "strength_clip": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
+
+6. "preset_name_suffix": ("STRING", {"default": ""}),
+7. "preset_name" : ("STRING", {"default": ""}),
+8.  "P1": ("STRING", {"multiline": True, "default": ""}),
+9.  "P2": ("STRING", {"multiline": True, "default": ""}),
+10. "P3": ("STRING", {"multiline": True, "default": ""}),
+11. "N1": ("STRING", {"multiline": True, "default": ""}),
+12. "N2": ("STRING", {"multiline": True, "default": ""})
+13. "N3": ("STRING", {"multiline": True, "default": ""})
+
+14. Load From preset ("BOOLEAN", {"default": False}), (JS에서 사용하는 버튼으로 동작)
+15. Load From Civitai ("BOOLEAN", {"default": False}), (JS에서 사용하는 버튼으로 동작)
+16. Save JSon ("BOOLEAN", {"default": False}), (JS에서 사용하는 버튼으로 동작)
+17. result : ("STRING", {"multiline": True, "default": ""})
+
+Python 상에서 실행시 동작 및 리턴 : 없음. 
+"""
+
+class PresetEditor:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "Subfolder": (["none"],),
+                "Select LoRA": (["none"],),
+                "Select Preset": (["none"],),
+                "strength_model": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
+                "strength_clip": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
+                "preset_name_suffix": ("STRING", {"default": ""}),
+                "preset_name": ("STRING", {"default": ""}),
+                "P1": ("STRING", {"multiline": True, "default": ""}),
+                "P2": ("STRING", {"multiline": True, "default": ""}),
+                "P3": ("STRING", {"multiline": True, "default": ""}),
+                "N1": ("STRING", {"multiline": True, "default": ""}),
+                "N2": ("STRING", {"multiline": True, "default": ""}),
+                "N3": ("STRING", {"multiline": True, "default": ""}),
+                "Load From Preset": ("BOOLEAN", {"default": False}),
+                "Load From Civitai": ("BOOLEAN", {"default": False}),
+                "Save JSON": ("BOOLEAN", {"default": False}),
+                "Refresh": ("BOOLEAN", {"default": False}),
+                "Result": ("STRING", {"multiline": True, "default": ""}),
+            },
+            "optional": {},
+        }
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "process"
+
+    CATEGORY = "LoRA Tools"
+
+    def process(
+        self,
+        Subfolder,
+        Select_LoRA,
+        Select_Preset,
+        strength_model,
+        strength_clip,
+        preset_name_suffix,
+        preset_name,
+        P1, P2, P3, N1, N2, N3,
+        Load_From_Preset,
+        Load_From_Civitai,
+        Save_JSON
+    ):
+        """이 노드는 UI에서 프리셋을 선택하고 수정하는 역할만 수행하며, 실제 실행은 하지 않음"""
+
+        result = f"Preset: {preset_name}\n" \
+                 f"Suffix: {preset_name_suffix}\n" \
+                 f"Strength Model: {strength_model}, Strength Clip: {strength_clip}\n" \
+                 f"P1: {P1}\nP2: {P2}\nP3: {P3}\n" \
+                 f"N1: {N1}\nN2: {N2}\nN3: {N3}\n"
+
+        return (result,)
+
+class PresetSaver:
     @classmethod
     def INPUT_TYPES(cls):
         lora_files = folder_paths.get_filename_list("loras")

@@ -22,6 +22,7 @@ from .nodes.dictionary_bus import (
 
 from .nodes.lora_nodes import (
     PresetSaver,
+    PresetEditor,
     PresetSelector,
     PresetSelectorV2,
     MultiPresetSelector,
@@ -47,6 +48,7 @@ NODE_CLASS_MAPPINGS = {
     "DictBusEdit": DictBusEdit,
 
     # LoRA Nodes
+    "PresetEditor" : PresetEditor,
     "LoraPresetSaver": PresetSaver,
     "LoraPresetSelector": PresetSelector,
     "LoraPresetSelectorV2": PresetSelectorV2,
@@ -73,6 +75,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DictBusEdit": "Dictionary Bus Edit",
 
     # LoRA Nodes
+    "PresetEditor" : "Preset Editor",
     "LoraPresetSaver": "LoRA Preset Saver",
     "LoraPresetSelector": "LoRA Preset Selector",
     "LoraPresetSelectorV2" : "LoRA Preset Selector V2, DICT",
