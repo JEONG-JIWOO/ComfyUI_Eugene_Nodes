@@ -6,8 +6,8 @@ Provides nodes for saving and selecting LoRA presets
 import folder_paths
 import os
 import json
-from .helper import LoraPresetHelper
-
+#from .helper import LoraPresetHelper
+LORA_BASE_PATH = folder_paths.get_folder_paths("loras")[0]
 
 """
 ## Preset Editor 노드의 입력 항목 설명:
@@ -165,10 +165,9 @@ class PresetEditor:
 - 키: LoRA의 식별자로 사용할 별명 (예: "chilloutmix", "animeHQ")
 - 값: 리스트 형태로 LoRA 기본 정보 저장
   1. 파일경로: LoRA 모델 파일 위치
-  2. 표시명: UI에 표시될 이름
-  3. 강도: LoRA 적용 강도 (기본값 1.0)
-  4. 클립강도: CLIP 모델 적용 강도 (기본값 1.0)
-  5. 유효키워드리스트: 해당 LoRA의 유효한 프롬프트 키워드 목록
+  2. 강도: LoRA 적용 강도 (기본값 1.0)
+  3. 클립강도: CLIP 모델 적용 강도 (기본값 1.0)
+  4. 유효키워드리스트: 해당 LoRA의 유효한 프롬프트 키워드 목록
 
 ## lora_keywards
 - 키: `{별명}_{프롬프트타입}` 형식의 키워드
@@ -182,7 +181,6 @@ class PresetEditor:
     "lora_info": {
         "anime": [
             "/loras/anime.safetensors",
-            "Anime Style LoRA",
             0.8,
             0.7,
             ["anime_P1", "anime_P2"]  # 유효한 프롬프트만 포함
@@ -219,20 +217,24 @@ import json
 # 참고: 여기서는 helper 함수(LoraPresetHelper.*)를 그대로 사용하되,
 #       출력된 preset_data의 키 이름(예:"P1", "P2", 등)을 기준으로 동작하도록 수정합니다.
 
-class PresetSelectorV2:
-    all_subfolders = []
-    all_presets = []
 
+
+class PresetSelectorV2:
     @classmethod
     def INPUT_TYPES(cls):
         # 최초 데이터 초기화 (노드 로드시 서브폴더 및 프리셋 목록을 채웁니다)
-        if not cls.all_subfolders:
-            cls.initialize_data()
+        subfolders = []  # 서브폴더 목록을 저장할 set (중복 방지)
+        # 📌 LORA_BASE_PATH를 기준으로 폴더 탐색
+        for root, dirs, files in os.walk(LORA_BASE_PATH):
+            rel_root = os.path.relpath(root, LORA_BASE_PATH)  # 기준 폴더로부터 상대경로 계산
+            rel_root = rel_root.replace("\\", "/")  # 윈도우 경로 정규화
 
+            if rel_root != ".":  # 현재 폴더(.)가 아니면 서브폴더 목록에 추가
+                subfolders.append(rel_root)
         return {
             "required": {
                 # 사용 가능한 서브폴더 목록 (helper를 통해 초기화)
-                "subfolder": (cls.all_subfolders,),
+                "subfolder": (subfolders,),
                 # LoRA 별칭(별명) 입력. 최종 lora_info의 key로 사용됩니다.
                 "Alias": ("STRING", {"default": "lora1"}),
                 # weight(강도) 값을 덮어쓸지 여부 (True이면 입력된 strength/clip_strength 사용)
@@ -243,14 +245,15 @@ class PresetSelectorV2:
                 # bypass가 True면 프리셋 로드 작업을 건너뛰고 그대로 결과 딕셔너리를 리턴함
                 "bypass": ("BOOLEAN", {"default": False}),
                 # refresh가 True면 내부 데이터(서브폴더/프리셋 목록)를 갱신함
-                "refresh": ("BOOLEAN", {"default": False}),
-                # output_loras: js에서 할당한 preset json 이름(이제 subfolder 포함 preset json 이름)
-                # JSON 형식의 문자열 예: '["SD1.5/my_preset.json"]'
-                "output_loras": ("STRING", {"default": "[]"})
+                "Refresh": ("BOOLEAN", {"default": False}),
+                # output_loras: js에서 할당한 preset json 파일 이름
+                # JSON 형식의 문자열 예: 'SD1.5/my_preset.json'
+                "SelectedPreset": ("STRING", {"default": ""})
             },
             "optional": {
                 # 기존 딕셔너리를 전달받으면 그대로 사용, 없으면 새로 생성
-                "input_lora_dict": ("DICT",)
+                "input_lora_dict": ("DICT",),
+                "Result": ("STRING", {"multiline": True, "default": ""}),
             }
         }
 
@@ -259,28 +262,8 @@ class PresetSelectorV2:
     FUNCTION = "select_preset"
     CATEGORY = "lora/preset"
 
-    @classmethod
-    def initialize_data(cls):
-        """노드가 로드될 때 서브폴더와 프리셋 목록을 초기화합니다."""
-        cls.all_subfolders = LoraPresetHelper.get_subfolder_list()
-        cls.all_presets = LoraPresetHelper.list_presets()
-        # cls.all_presets는 원래 (preset_path, display_name) 튜플 리스트였으나,
-        # 이제 display_name은 사용되지 않고 preset_path(즉, subfolder를 포함한 프리셋 JSON 이름)가 전달됩니다.
-
-    @classmethod
-    def update_data(cls):
-        """데이터 갱신 함수 (노드 외부에서 호출할 수 있음)"""
-        cls.initialize_data()
-        return {
-            "subfolders": cls.all_subfolders,
-            "presets": [
-                {"path": path, "display_name": display_name}
-                for path, display_name in cls.all_presets
-            ]
-        }
-
     def select_preset(self, subfolder, Alias, override_weights, strength, clip_strength,
-                      bypass, refresh, output_loras, input_lora_dict=None):
+                      bypass, Refresh, SelectedPreset, input_lora_dict=None,Result=""):
         """
         프리셋을 선택하여 LoRA 관리 딕셔너리(lora_info, lora_keywards)를 생성합니다.
 
@@ -289,9 +272,6 @@ class PresetSelectorV2:
         - 프리셋 JSON에서 새 구조에 따라 lora_path, strength_model, strength_clip, P1, P2, P3, N1, N2, N3 키를 사용합니다.
         - 유효한 프롬프트 텍스트(P1~N3)가 있으면 해당 키워드를 lora_keywards 딕셔너리에 저장하고, 그 키 목록을 lora_info에도 저장합니다.
         """
-        # refresh가 True면 데이터 갱신
-        if refresh:
-            self.update_data()
 
         # input_lora_dict가 이미 전달되었으면 그대로 사용, 없으면 새 딕셔너리 생성
         if input_lora_dict:
@@ -306,18 +286,12 @@ class PresetSelectorV2:
         if bypass:
             return (result,)
 
-        try:
-            # output_loras는 이제 preset json 이름(서브폴더 포함)이 담긴 JSON 문자열입니다.
-            display_names = json.loads(output_loras)
-            if not display_names:
-                return (result,)
+        base_path = LORA_BASE_PATH.replace("\\", "/")
 
-            # 이제 첫 번째 요소가 preset_path (즉, subfolder 포함 preset json 이름)
-            preset_path = display_names[0]
-            # preset_path를 기반으로 프리셋 데이터를 로드합니다.
-            preset_data = LoraPresetHelper.load_preset_data().get(preset_path)
-            if preset_data is None:
-                print(f"Warning: No preset data found for: {preset_path}")
+        # output_loras는 이제 preset json 이름(서브폴더 포함)이 담긴 JSON 문자열입니다.
+        with open(os.path.join(base_path, SelectedPreset), 'r', encoding='utf-8') as f:
+            preset_data = json.load(f)
+            if not preset_data:
                 return (result,)
 
             # 새로운 LoRA 엔트리 생성
@@ -334,10 +308,8 @@ class PresetSelectorV2:
             # 프롬프트 키워드를 저장할 리스트 (lora_info의 5번째 요소)
             prompt_keys = []
 
-            # lora_info의 두 번째 요소(표시명)는 더 이상 별도의 display_name이 없으므로, preset_path를 그대로 사용합니다.
             result["lora_info"][Alias] = [
                 lora_path,  # 파일 경로
-                preset_path,  # 표시명 대신 preset_path 사용
                 final_strength,  # 적용 강도
                 final_clip_strength,  # 클립 강도
                 prompt_keys  # 유효 프롬프트 키워드 목록 (나중에 추가)
@@ -371,15 +343,11 @@ class PresetSelectorV2:
 
             return (result,)
 
+'''
         except json.JSONDecodeError:
-            print(f"Error decoding output_loras JSON: {output_loras}")
+            print(f"Error decoding output_loras JSON: {SelectedPreset}")
             return (result,)
         except Exception as e:
             print(f"Error in select_preset: {str(e)}")
             return (result,)
-
-    @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        # 데이터 갱신 여부를 판단하기 위해 항상 True를 반환합니다.
-        cls.initialize_data()
-        return True
+'''

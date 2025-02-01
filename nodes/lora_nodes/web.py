@@ -149,8 +149,7 @@ def setup_routes(server):
         - `/lora/list`           -> LoRA 파일 및 폴더 목록 조회
         - `/lora/hash`           -> .safetensors 파일의 SHA256 해시 계산
         - `/lora/json`           -> JSON 파일 내용을 반환
-        - `/lora_presets`        -> LoRA 프리셋 정보
-        - `/lora_presets/refresh` -> LoRA 프리셋 새로고침
+        - `/lora/save_json`        ->JSON 저장
     """
 
     app = server.app

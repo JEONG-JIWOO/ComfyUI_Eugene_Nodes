@@ -347,7 +347,7 @@ export async function savePresetJson(node) {
 
         // JSON 데이터 구성 (필요한 필드를 프리셋 JSON 구조에 맞게 매핑)
         const jsonData = {
-            lora_path: loraWidget.value, // 혹은 노드에 맞게 값 조정
+            lora_path: subfolder + "/" +loraWidget.value, // 혹은 노드에 맞게 값 조정
             strength_model: strengthModelWidget.value,
             strength_clip: strengthClipWidget.value,
             P1: P1Widget.value,
