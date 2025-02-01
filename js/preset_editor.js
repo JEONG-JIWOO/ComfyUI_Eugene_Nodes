@@ -1,6 +1,7 @@
 import { app } from "../../scripts/app.js";
 import * as utils from "./utils.js";  // 📌 utils.js도 통합 가져오기
 import * as eugeneUtils from "./eugene_utils.js";  // 📌 모든 함수 통합 가져오기
+import {createHyperlinkWidget} from "./custom_widget.js";  // 📌 모든 함수 통합 가져오기
 
 app.registerExtension({
     name: "PresetEditor.extension",
@@ -35,11 +36,25 @@ app.registerExtension({
                 presetWidget.callback = () => eugeneUtils.handlePresetSelection(this);
             }
 
+             // 📌 "Load From civitai" 버튼 콜백 연결
+            const civitaiButton = utils.getWidget(this, "Load From Civitai");
+            if (civitaiButton) {
+                civitaiButton.callback = () => eugeneUtils.handleCivitaiSelection(this);
+            }
+
             // 📌 "Refresh" 버튼 콜백 연결
             const refreshButton = utils.getWidget(this, "Refresh");
             if (refreshButton) {
                 refreshButton.callback = () => eugeneUtils.refreshSubfolderList(this);
             }
+
+            this.widgets.push(createHyperlinkWidget({
+               name: "CivitaiLinkButton",
+               defaultUrl: "", // 초기에는 빈 문자열로 시작
+               onClick: (url) => {
+                 console.log("Link clicked:", url);
+               }
+            }));
 
             // 📌 API 호출하여 초기 Subfolder 옵션 설정
             await eugeneUtils.refreshSubfolderList(this);

@@ -35,6 +35,127 @@ Preset Editor
 
 14. Load From preset ("BOOLEAN", {"default": False}), (JS에서 사용하는 버튼으로 동작)
 15. Load From Civitai ("BOOLEAN", {"default": False}), (JS에서 사용하는 버튼으로 동작)
+
+Load From Civitai 구현 
+
+https://civitai.com/api/v1/model-versions/by-hash/{SHA256 HASH}
+
+'''
+{
+  "id": 1050496,
+  "modelId": 706978,
+  "name": "V.3",
+  "createdAt": "2024-11-11T11:46:50.924Z",
+  "updatedAt": "2024-11-11T11:49:42.072Z",
+  "status": "Published",
+  "publishedAt": "2024-11-11T11:49:42.064Z",
+  "trainedWords": [
+    "aesthetic_pos3",
+    "dynamic_pos3"
+  ],
+  "trainingStatus": null,
+  "trainingDetails": null,
+  "baseModel": "Flux.1 D",
+  "baseModelType": null,
+  "earlyAccessEndsAt": null,
+  "earlyAccessConfig": null,
+  "description": "\u003Cp\u003ENew Triggers:\u003C/p\u003E\u003Cul\u003E\u003Cli\u003E\u003Cp\u003Eaesthetic_pos3\u003C/p\u003E\u003C/li\u003E\u003Cli\u003E\u003Cp\u003Edynamic_pos3\u003C/p\u003E\u003C/li\u003E\u003C/ul\u003E\u003Cp\u003EIn this new version of Aesthetic Poses v3, I've added new poses, enhanced realism, and trained it with models from all around the world (previously, most of the generated images were primarily of Asian models). I hope you enjoy it!\u003C/p\u003E",
+  "uploadType": "Created",
+  "usageControl": "Download",
+  "air": "urn:air:flux1:lora:civitai:706978@1050496",
+  "stats": {
+    "downloadCount": 3426,
+    "ratingCount": 0,
+    "rating": 0,
+    "thumbsUpCount": 355
+  },
+  "model": {
+    "name": "Realistic/Aesthetic Poses FluxDev",
+    "type": "LORA",
+    "nsfw": false,
+    "poi": false
+  },
+  "files": [
+    {
+      "id": 956231,
+      "sizeKB": 167938.8828125,
+      "name": "aeshteticv5.safetensors",
+      "type": "Model",
+      "pickleScanResult": "Success",
+      "pickleScanMessage": "No Pickle imports",
+      "virusScanResult": "Success",
+      "virusScanMessage": null,
+      "scannedAt": "2024-11-11T11:50:59.770Z",
+      "metadata": {
+        "format": "SafeTensor",
+        "size": null,
+        "fp": null
+      },
+      "hashes": {
+        "AutoV1": "88828AE7",
+        "AutoV2": "21437EC266",
+        "SHA256": "21437EC26670E230B067CA936F6657CAF5CA063F15AEC333EF249BEC7C0F0DC0",
+        "CRC32": "F8F2BE29",
+        "BLAKE3": "AAA6F513C4BFA00031941F3A427046D31A12B161CBE2CE75AAB260C74D13C0FC",
+        "AutoV3": "7AAE878CB805"
+      },
+      "primary": true,
+      "downloadUrl": "https://civitai.com/api/download/models/1050496"
+    }
+  ],
+  "images": [
+    {
+      "url": "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/21bb784f-4759-4a6d-bd04-66964b87903b/width=450/39539160.jpeg",
+      "nsfwLevel": 2,
+      "width": 768,
+      "height": 1280,
+      "hash": "UOF~jNwG5QT076ngkCS$LNRj$iWYpebvxZ$*",
+      "type": "image",
+      "metadata": {
+        "hash": "UOF~jNwG5QT076ngkCS$LNRj$iWYpebvxZ$*",
+        "size": 1539987,
+        "width": 768,
+        "height": 1280
+      },
+      "meta": {
+        "seed": 185666893452671,
+        "vaes": [
+          "ae.sft"
+        ],
+        "comfy": "...",
+        "steps": 26,
+        "models": [],
+        "prompt": "aesthetic_pos3, dynamic_pos3, Retro-inspired outdoor shot of a woman on a vintage cream-colored bicycle in a sunlit garden. She wears a metallic gold swimsuit, white sneakers, and an oversized translucent orange visor, adding a futuristic touch. Surrounded by lush green trees and a clear blue sky, her relaxed pose and vibrant outfit contrast with the serene park setting, creating a playful, nostalgic vibe.",
+        "denoise": 1,
+        "sampler": "Euler",
+        "cfgScale": 3.5,
+        "modelIds": [],
+        "scheduler": "simple",
+        "upscalers": [],
+        "versionIds": [],
+        "controlNets": [],
+        "additionalResources": [
+          {
+            "name": "aeshteticv5.safetensors",
+            "type": "lora",
+            "strength": 1
+          }
+        ]
+      },
+...
+'''
+
+"P1" 에 "trainedWords"  할당
+"P2" 에 "images": 의 첫번째 이미지의 "meta"의  "prompt" 할당
+
+"preset_name_prefix" : 비어있다면,  "baseModel" 할당 
+
+"preset_name" <- "name": "Realistic/Aesthetic Poses FluxDev", -> 
+
+그리고 Custom print 대신 직접  "Result" 위젯에 값 할당으로 접속링크인 https://civitai.com/models/${modelId} 를 출력해주자
+
+
+
 16. Save JSon ("BOOLEAN", {"default": False}), (JS에서 사용하는 버튼으로 동작)
 17. result : ("STRING", {"multiline": True, "default": ""})
 

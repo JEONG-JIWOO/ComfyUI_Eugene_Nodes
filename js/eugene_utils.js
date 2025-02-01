@@ -190,10 +190,116 @@ export async function handlePresetSelection(node) {
 
         // 📌 UI 업데이트 반영
         app.graph.setDirtyCanvas(true);
-        utils.customPrint(node, "Success", `Load Json : ${data}`);
+        utils.customPrint(node, "Success", `Load Json:\n${JSON.stringify(data, null, 4)}`);
 
     } catch (error) {
         console.error("[PresetEditor] Failed to load preset:", error);
+        utils.customPrint(node, "ERROR", error.message);
+    }
+}
+
+export async function handleCivitaiSelection(node) {
+    try {
+        // 📌 "Select LoRA" 위젯에서 선택된 파일명을 가져옴
+        const loraWidget = utils.getWidget(node, "Select LoRA");
+        if (!loraWidget) return;
+        const selectedLoRA = loraWidget.value;
+        if (!selectedLoRA || selectedLoRA === "none") {
+            console.warn("[PresetEditor] No LoRA file selected.");
+            return;
+        }
+
+        // 📌 "Subfolder" 위젯에서 현재 서브폴더명을 가져옴
+        const subfolderWidget = utils.getWidget(node, "Subfolder");
+        if (!subfolderWidget) return;
+        const subfolder = subfolderWidget.value;
+
+        // 📌 파일 경로 구성 (예: "SD1.5/enhance.safetensors")
+        const filePath = `${subfolder}/${selectedLoRA}`;
+
+        // 📌 기존 API를 통해 선택된 파일의 SHA256 해시 가져오기
+        const hashResponse = await api.fetchApi(`/lora/hash?path=${encodeURIComponent(filePath)}`);
+        if (!hashResponse.ok) throw new Error("Failed to fetch file hash");
+        const hashData = await hashResponse.json();
+        if (hashData.error) throw new Error(hashData.error);
+        const fileHash = hashData.hash;
+
+        // 📌 civitai API 호출 (SHA256 해시를 이용)
+        const civitaiResponse = await fetch(`https://civitai.com/api/v1/model-versions/by-hash/${fileHash}`);
+        if (!civitaiResponse.ok) throw new Error("Failed to fetch civitai data");
+        const civitaiData = await civitaiResponse.json();
+
+        // 📌 "P1" 위젯에 trainedWords 할당 (배열이면 콤마로 연결)
+        const p1Widget = utils.getWidget(node, "P1");
+        if (p1Widget) {
+            p1Widget.value = Array.isArray(civitaiData.trainedWords)
+                ? civitaiData.trainedWords.join(", ")
+                : "";
+        }
+
+        // 📌 "P2" 위젯에 첫 번째 이미지의 meta.prompt 할당
+        const p2Widget = utils.getWidget(node, "P2");
+        if (p2Widget) {
+            if (civitaiData.images &&
+                civitaiData.images.length > 0 &&
+                civitaiData.images[0].meta &&
+                civitaiData.images[0].meta.prompt) {
+                //p2Widget.value = civitaiData.images[0].meta.prompt;
+                p2Widget.value = "";
+            } else {
+                p2Widget.value = "";
+            }
+        }
+
+        // 📌 추가: "P3", "N1", "N2", "N3" 공백 값 할당
+        const p3Widget = utils.getWidget(node, "P3");
+        if (p3Widget) p3Widget.value = "";
+
+        const n1Widget = utils.getWidget(node, "N1");
+        if (n1Widget) n1Widget.value = "";
+
+        const n2Widget = utils.getWidget(node, "N2");
+        if (n2Widget) n2Widget.value = "";
+
+        const n3Widget = utils.getWidget(node, "N3");
+        if (n3Widget) n3Widget.value = "";
+
+        // 📌 "preset_name_prefix": 값이 비어있다면 baseModel 할당
+        const prefixWidget = utils.getWidget(node, "preset_name_prefix");
+        if (prefixWidget && !prefixWidget.value) {
+            prefixWidget.value = civitaiData.baseModel || "";
+        }
+
+        // 📌 "preset_name" 위젯에 model.name 할당 (civitaiData.model.name)
+        const presetNameWidget = utils.getWidget(node, "preset_name");
+        if (presetNameWidget) {
+            presetNameWidget.value = (civitaiData.model && civitaiData.model.name) ? civitaiData.model.name : "";
+        }
+
+        // 📌 "Result" 위젯에 civitai 접속 링크 할당 (예: https://civitai.com/models/706978)
+        const resultWidget = utils.getWidget(node, "Result");
+        if (resultWidget) {
+            const modelId = civitaiData.modelId;
+            resultWidget.value = `https://civitai.com/models/${modelId}`;
+        }
+
+        const linkWidget = node.widgets.find(w => w.name === "CivitaiLinkButton");
+        if (linkWidget) {
+          const modelId = civitaiData.modelId;
+          linkWidget.value = `https://civitai.com/models/${modelId}`;
+        }
+
+        // 📌 "civitaiButton 버튼을 다시 비활성화 (false)
+        const civitaiButton = utils.getWidget(node, "Load From Civitai");
+        if (civitaiButton) {
+            civitaiButton.value = false;
+            //node.graph.setDirtyCanvas(true);
+        }
+
+        // 📌 UI 업데이트
+        app.graph.setDirtyCanvas(true);
+    } catch (error) {
+        console.error("[PresetEditor] Failed to load civitai data:", error);
         utils.customPrint(node, "ERROR", error.message);
     }
 }
