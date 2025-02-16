@@ -30,6 +30,10 @@ from .nodes.lora_nodes import (
     setup_web,
 )
 
+from .nodes.latent_node import (
+    LatentExpander,
+)
+
 NODE_CLASS_MAPPINGS = {
     # Dictionary Nodes
     "DictUpdate1": DictUpdate1,
@@ -50,9 +54,10 @@ NODE_CLASS_MAPPINGS = {
     "LoraPresetLoader": AdvancedLoraLoader,
     "LoraPresetListLoader": ListBasedLoraLoader,
     "ListBasedLoraLoadOnly": ListBasedLoraLoadOnly,
-    "DictBasedLoraLoader":DictBasedLoraLoader
-}
+    "DictBasedLoraLoader":DictBasedLoraLoader,
 
+    "LatentExpander" : LatentExpander,
+}
 NODE_DISPLAY_NAME_MAPPINGS = {
     # Dictionary Nodes
     "DictUpdate1": "Dictionary Update (1 pair)",
@@ -75,6 +80,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoraPresetListLoader": "LoRA Preset List Loader & Encoder",
     "ListBasedLoraLoadOnly" : "LoRA Preset List Loader Only",
     "DictBasedLoraLoader": "LoRA Preset Dict Loader",
+
+    "LatentExpander": "Latent Expander",
 }
 
 # Get the web server instance from ComfyUI

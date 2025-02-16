@@ -93,11 +93,11 @@ class PresetEditor:
                 # 양수 프롬프트 관련 값들 (P1, P2, P3)
                 "P1": ("STRING", {"multiline": True, "default": ""}),
                 "P2": ("STRING", {"multiline": True, "default": ""}),
-                "P3": ("STRING", {"multiline": True, "default": ""}),
+                "P3": ("STRING", {"multiline": False, "default": ""}),
                 # 음수 프롬프트 관련 값들 (N1, N2, N3)
                 "N1": ("STRING", {"multiline": True, "default": ""}),
                 "N2": ("STRING", {"multiline": True, "default": ""}),
-                "N3": ("STRING", {"multiline": True, "default": ""}),
+                "N3": ("STRING", {"multiline": False, "default": ""}),
                 # Load From Preset 버튼 (JS에서 동작하여 프리셋 JSON을 불러옴)
                 "Load From Preset": ("BOOLEAN", {"default": False}),
                 # Load From Civitai 버튼 (JS에서 동작하여 civitai 데이터를 가져옴)

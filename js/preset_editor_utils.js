@@ -91,9 +91,9 @@ export async function updateLoraAndPresetList(node, subfolder) {
         const safetensors = data.safetensors.filter(file => file.startsWith(subfolder));
         const jsons = data.jsons.filter(file => file.startsWith(subfolder));
 
-        // 📌 파일명만 추출 (subfolder 제거)
-        const loraFiles = safetensors.map(file => file.replace(subfolder + "/", ""));
-        const presetFiles = jsons.map(file => file.replace(subfolder + "/", ""));
+        // 📌 파일명만 추출 (subfolder 제거) + 기본값 "none" 포함
+        const loraFiles = ["none", ...safetensors.map(file => file.replace(subfolder + "/", ""))];
+        const presetFiles = ["none", ...jsons.map(file => file.replace(subfolder + "/", ""))];
 
         // 📌 Select LoRA & Select Preset 목록 업데이트
         loraWidget.options.values = loraFiles.length > 0 ? loraFiles : ["none"];

@@ -47,11 +47,14 @@ class LoraPresetHelper:
         for root, _, files in os.walk(lora_dir):
             for file in files:
                 rel_path = os.path.relpath(os.path.join(root, file), lora_dir)
-                try:
-                    with open(os.path.join(root, file), 'r', encoding='utf-8') as f:
-                        preset_data[rel_path] = json.load(f)
-                except json.JSONDecodeError:
-                    print(f"Error decoding JSON from {rel_path}")
+                if file.endswith('.json'):
+                    try:
+                        with open(os.path.join(root, file), 'r', encoding='utf-8') as f:
+                            preset_data[rel_path] = json.load(f)
+                    except json.JSONDecodeError:
+                        print(f"Error decoding JSON from {rel_path}")
+                    except :
+                        pass
         return preset_data
 
     @staticmethod
@@ -79,21 +82,40 @@ class LoraPresetHelper:
 
     @staticmethod
     def replace_dict_keys(text, input_dict):
-        """Replaces dictionary keys in text with their values."""
+        """Replaces dictionary keys in text with their values.
+           만약 해당 키가 없으면 빈 문자열("")로 대체합니다.
+        """
 
         def replace_key(match):
             key = match.group(1)
-            return str(input_dict.get(key, match.group(0)))
+            return str(input_dict.get(key, ""))  # 키가 없으면 빈 문자열 반환
 
         return re.sub(r'\{([^}]+)\}', replace_key, text)
 
     @staticmethod
     def load_and_apply_lora(loaded_loras, model, clip, lora_path, strength, clip_strength):
-        """Loads and applies a LoRA to the model and CLIP."""
-        if lora_path not in loaded_loras:
-            lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
-            loaded_loras[lora_path] = lora
-        else:
-            lora = loaded_loras[lora_path]
+        """Loads and applies a LoRA to the model and CLIP.
 
-        return comfy.sd.load_lora_for_models(model, clip, lora, strength, clip_strength)
+        In case of any exception, the original (model, clip) is returned.
+        """
+        try:
+            # safetensor 로라가 상대경로여서 못 찾는 경우 절대경로로 재시도
+            if not os.path.exists(lora_path):
+                LORA_BASE_PATH = folder_paths.get_folder_paths("loras")[0]
+                candidate_path = os.path.join(LORA_BASE_PATH, lora_path)
+                if os.path.exists(candidate_path):
+                    lora_path = candidate_path
+                else:
+                    print(f"LoRA file not found: {lora_path}, ignore")
+                    return (model, clip)
+
+            if lora_path not in loaded_loras:
+                lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
+                loaded_loras[lora_path] = lora
+            else:
+                lora = loaded_loras[lora_path]
+
+            return comfy.sd.load_lora_for_models(model, clip, lora, strength, clip_strength)
+        except Exception as e:
+            print(f"Exception occurred in load_and_apply_lora: {str(e)}")
+            return (model, clip)
