@@ -350,3 +350,95 @@ class PresetSelectorV2:
             print(f"Error in select_preset: {str(e)}")
             return (result,)
 '''
+
+
+class PresetSelectorV2Multi:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                # 5개의 LoRA에 대해 Alias, strength, preset 파일 경로만 입력받음
+                "Alias1": ("STRING", {"default": "lora1"}),
+                "Strength1": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                "PresetPath1": ("STRING", {"multiline": True,"default": ""}),
+
+                "Alias2": ("STRING", {"default": "lora2"}),
+                "Strength2": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                "PresetPath2": ("STRING", {"multiline": True,"default": ""}),
+
+                "Alias3": ("STRING", {"default": "lora3"}),
+                "Strength3": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                "PresetPath3": ("STRING", {"multiline": True,"default": ""}),
+
+                "Alias4": ("STRING", {"default": "lora4"}),
+                "Strength4": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                "PresetPath4": ("STRING", {"multiline": True,"default": ""}),
+
+                "Alias5": ("STRING", {"default": "lora5"}),
+                "Strength5": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                "PresetPath5": ("STRING", {"multiline": True,"default": ""}),
+            },
+            "optional": {
+                "input_lora_dict": ("DICT",),
+            }
+        }
+
+    RETURN_TYPES = ("DICT",)
+    RETURN_NAMES = ("selected_lora_dict",)
+    FUNCTION = "select_multi"
+    CATEGORY = "lora/preset"
+
+    def select_multi(self,
+                     Alias1, Strength1, PresetPath1,
+                     Alias2, Strength2, PresetPath2,
+                     Alias3, Strength3, PresetPath3,
+                     Alias4, Strength4, PresetPath4,
+                     Alias5, Strength5, PresetPath5,
+                     input_lora_dict=None):
+        """
+        5개의 LoRA 프리셋을 한 번에 DICT에 저장합니다.
+        각 프리셋은 Alias, strength, preset 파일 경로만 사용합니다.
+        strength는 항상 오버라이드됩니다.
+        """
+        result = input_lora_dict if input_lora_dict else {
+            "lora_info": {},
+            "lora_keywards": {}
+        }
+
+        # 내부 함수: 프리셋 하나 처리
+        def add_preset(alias, strength, preset_path):
+            if not preset_path or not alias:
+                return
+            try:
+                with open(os.path.join(LORA_BASE_PATH, preset_path), 'r', encoding='utf-8') as f:
+                    preset_data = json.load(f)
+                lora_path = preset_data.get("lora_path") or preset_data.get("lora_name", "")
+                clip_strength = preset_data.get("strength_clip") or preset_data.get("clip_strength", 1.0)
+                prompt_keys = []
+
+                result["lora_info"][alias] = [
+                    lora_path,
+                    strength,  # 항상 오버라이드
+                    clip_strength,
+                    prompt_keys
+                ]
+
+                # 프롬프트 키워드 저장
+                for key in ["P1", "P2", "P3", "N1", "N2", "N3"]:
+                    value = preset_data.get(key)
+                    if value:
+                        prompt_key = f"{alias}_{key}"
+                        prompt_keys.append(prompt_key)
+                        result["lora_keywards"][prompt_key] = value
+            except Exception as e:
+                # 에러 무시 (파일 없거나 JSON 파싱 실패 등)
+                pass
+
+        # 5개 LoRA 처리
+        add_preset(Alias1, Strength1, PresetPath1)
+        add_preset(Alias2, Strength2, PresetPath2)
+        add_preset(Alias3, Strength3, PresetPath3)
+        add_preset(Alias4, Strength4, PresetPath4)
+        add_preset(Alias5, Strength5, PresetPath5)
+
+        return (result,)

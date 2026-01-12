@@ -44,9 +44,10 @@ app.registerExtension({
         presetSelectorUtils.setBypassState(this, bypassWidget.value);
       };
 
-      // 초기 위젯 업데이트: /lora/list를 통해 서브폴더 옵션과 프리셋 목록을 가져와 갱신
-      await presetSelectorUtils.updateWidgets(this, subfolderWidget.value, true);
-      app.graph.setDirtyCanvas(true);
+        // 한 번만 업데이트 실행
+        await presetSelectorUtils.updateWidgets(this, subfolderWidget.value, true);
+        this.graph.setDirtyCanvas(true);
+        app.graph.setDirtyCanvas(true);
 
       // 그래프 로드 완료 후, 일정 시간 지연(1초) 후 복원 시도
       setTimeout(() => {

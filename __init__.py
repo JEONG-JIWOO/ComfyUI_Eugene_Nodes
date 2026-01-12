@@ -11,13 +11,18 @@ from .nodes.dictionary_nodes import (
     DictTemplate,
     DictMultilineSelect,
     DictJSONSave,
-    DictJSONLoad
+    DictJSONLoad,
+    XMLTagExtractor,
+    JSONFileSelector,
+    DictSaveToFolder,
+    DictLoadFromPath,
 )
 
 from .nodes.dictionary_bus import (
     DictBus,
     DictBusUnpack,
-    DictBusEdit
+    DictBusEdit,
+    DictBusUpdateFirstDict
 )
 
 from .nodes.lora_nodes import (
@@ -27,11 +32,36 @@ from .nodes.lora_nodes import (
     ListBasedLoraLoader,
     ListBasedLoraLoadOnly,
     DictBasedLoraLoader,
+    MultiPromptGenerator,
     setup_web,
+    PresetSelectorV2Multi,
 )
 
 from .nodes.latent_node import (
     LatentExpander,
+    SetMultipleLatentNoiseMasks,
+    SetMultipleImageNoiseMasks,
+    CropMultipleImagesByMasks,
+    MergeInpaintedLatent,
+)
+
+from .nodes.mask_nodes import (
+    MaskSplitAndGrow2Ways,
+    MaskSplitAndGrow3Ways,
+)
+from .nodes.dwpose_mask import (
+    DwposeMask,
+    YoloPoseMask,
+)
+
+from .nodes.keypoint_extractor import (
+    KeypointExtractor,
+    KeypointDivider,
+    YoloPoseKeypointDivider,
+)
+
+from .nodes.mask_mover import (
+    MaskMover,
 )
 
 NODE_CLASS_MAPPINGS = {
@@ -43,6 +73,12 @@ NODE_CLASS_MAPPINGS = {
     "DictMultilineSelect": DictMultilineSelect,
     "DictJSONSave":DictJSONSave,
     "DictJSONLoad": DictJSONLoad,
+    "XMLTagExtractor": XMLTagExtractor,
+    "DictBusUpdateFirstDict": DictBusUpdateFirstDict,
+    "JSONFileSelector": JSONFileSelector,
+    "DictSaveToFolder": DictSaveToFolder,
+    "DictLoadFromPath": DictLoadFromPath,
+
     # Dictionary Bus Nodes
     "DictBus": DictBus,
     "DictBusUnpack": DictBusUnpack,
@@ -55,8 +91,28 @@ NODE_CLASS_MAPPINGS = {
     "LoraPresetListLoader": ListBasedLoraLoader,
     "ListBasedLoraLoadOnly": ListBasedLoraLoadOnly,
     "DictBasedLoraLoader":DictBasedLoraLoader,
+    "MultiPromptGenerator":MultiPromptGenerator,
+    "PresetSelectorV2Multi":PresetSelectorV2Multi,
 
+    # Latent Nodes
     "LatentExpander" : LatentExpander,
+    "SetMultipleLatentNoiseMasks": SetMultipleLatentNoiseMasks,
+    "SetMultipleImageNoiseMasks": SetMultipleImageNoiseMasks,
+    "CropMultipleImagesByMasks": CropMultipleImagesByMasks,
+    "MergeInpaintedLatent": MergeInpaintedLatent,
+
+    # Mask Nodes
+    "MaskSplitAndGrow2Ways": MaskSplitAndGrow2Ways,
+    "MaskSplitAndGrow3Ways": MaskSplitAndGrow3Ways,
+    "DwposeMask": DwposeMask,
+    "YoloPoseMask": YoloPoseMask,
+
+    # Keypoint Extractor Node
+    "KeypointExtractor": KeypointExtractor,
+    "KeypointDivider": KeypointDivider,
+    "YoloPoseKeypointDivider": YoloPoseKeypointDivider,
+
+    "MaskMover": MaskMover,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     # Dictionary Nodes
@@ -67,6 +123,11 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DictMultilineSelect": "Dictionary Multiline Select",
     "DictJSONSave": "Dictionary Save as Json",
     "DictJSONLoad": "Dictionary Load from Json",
+    "XMLTagExtractor": "XML Tag Content Extractor",
+    "JSONFileSelector": "JSON File Selector",
+    "DictBusUpdateFirstDict": "Dictionary Bus Update First Dict",
+    "DictSaveToFolder": "Dictionary Save To Custom Folder",
+    "DictLoadFromPath": "Dictionary Load From File Path",
 
     # Dictionary Bus Nodes
     "DictBus": "Dictionary Bus",
@@ -80,8 +141,27 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoraPresetListLoader": "LoRA Preset List Loader & Encoder",
     "ListBasedLoraLoadOnly" : "LoRA Preset List Loader Only",
     "DictBasedLoraLoader": "LoRA Preset Dict Loader",
-
+    "MultiPromptGenerator": "Multi Prompt Generator",
+    "PresetSelectorV2Multi": "Multi LoRA Preset Selector",
+    
+    # Latent Nodes
     "LatentExpander": "Latent Expander",
+    "SetMultipleLatentNoiseMasks": "Set Multiple Latent Noise Masks",
+    "SetMultipleImageNoiseMasks": "Set Multiple Image Noise Masks",
+    "CropMultipleImagesByMasks": "Crop Multiple Images By Masks",
+    "MergeInpaintedLatent": "Merge Inpainted Latent",
+
+    # Mask Nodes
+    "MaskSplitAndGrow2Ways": "Mask Split and Grow 2 Ways",
+    "MaskSplitAndGrow3Ways": "Mask Split and Grow 3 Ways",
+    "DwposeMask": "Dwpose Mask",
+    "YoloPoseMask": "Yolo Pose Mask",
+
+    # Keypoint Extractor Node
+    "KeypointExtractor": "Keypoint Extractor",
+    "KeypointDivider": "Keypoint Divider",
+    "YoloPoseKeypointDivider": "Yolo Pose Keypoint Divider",
+    "MaskMover": "Mask Mover",
 }
 
 # Get the web server instance from ComfyUI

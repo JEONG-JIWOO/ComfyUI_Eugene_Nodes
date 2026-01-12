@@ -4,8 +4,8 @@ Provides nodes for managing and applying LoRA presets in ComfyUI
 """
 
 import os
-from .preset_nodes import  PresetSelectorV2, PresetEditor
-from .loader_nodes import AdvancedLoraLoader, ListBasedLoraLoader,ListBasedLoraLoadOnly, DictBasedLoraLoader
+from .preset_nodes import  PresetSelectorV2, PresetEditor,PresetSelectorV2Multi
+from .loader_nodes import AdvancedLoraLoader, ListBasedLoraLoader,ListBasedLoraLoadOnly, DictBasedLoraLoader, MultiPromptGenerator
 from .web import setup_routes
 
 __all__ = [
@@ -14,7 +14,9 @@ __all__ = [
     'AdvancedLoraLoader',
     'ListBasedLoraLoader',
     'ListBasedLoraLoadOnly',
-    'DictBasedLoraLoader'
+    'DictBasedLoraLoader',
+    'MultiPromptGenerator',
+    'PresetSelectorV2Multi',
 ]
 
 # Web directory for JavaScript files

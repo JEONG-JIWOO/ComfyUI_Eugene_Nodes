@@ -237,7 +237,8 @@ class ListBasedLoraLoader(AdvancedLoraLoader):
         # Generate conditioning
             positive_conditioning = LoraPresetHelper.encode_prompt(clip_modified, positive_prompt)
             negative_conditioning = LoraPresetHelper.encode_prompt(clip_modified, negative_prompt)
-        except:
+        except Exception as e:
+            print(f"Error encoding prompts in ListBasedLoraLoader: {e}")
             pass
         return (input_dictionary, model, clip_modified, vae, positive_conditioning, negative_conditioning,
                 (model, clip, vae, positive_conditioning, negative_conditioning),
@@ -425,7 +426,8 @@ class DictBasedLoraLoader:
                     if self.has_prompting_keys(total_prompts, prompt_keys):
                         total_weight += abs(strength) + abs(clip_strength)
                         valid_loras.append((alias, path, strength, clip_strength, prompt_keys))
-
+                        print(f"valid_loras: {alias} {path} {strength} {clip_strength} {prompt_keys}")
+            
             # 가중치 제한이 활성화되고 총 가중치가 제한을 초과하는 경우 조정
             if limit_total_weight and total_weight > weight_limit and total_weight > 0:
                 scale_factor = weight_limit / total_weight
@@ -482,3 +484,59 @@ class DictBasedLoraLoader:
     def has_prompting_keys(self, prompts, prompt_keys):
         combined_text = ", ".join(filter(None, prompts))
         return any(f"{{{key}}}" in combined_text for key in prompt_keys)
+
+
+class MultiPromptGenerator:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "common_prefix": ("STRING", {"multiline": True}),
+                "prompt1_body": ("STRING", {"multiline": True}),
+                "prompt2_body": ("STRING", {"multiline": True}),
+                "prompt3_body": ("STRING", {"multiline": True}),
+                "prompt4_body": ("STRING", {"multiline": True}),
+                "common_suffix": ("STRING", {"multiline": True}),
+            },
+            "optional": {
+                "input_dictionary": ("DICT",),
+                "lora_dict": ("DICT",),
+                "dict_bus": ("DICT_BUS",),
+            }
+        }
+
+    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING")
+    RETURN_NAMES = ("prompt1", "prompt2", "prompt3", "prompt4")
+    FUNCTION = "generate_prompts"
+    CATEGORY = "lora/prompt"
+
+    def generate_prompts(self, common_prefix,prompt1_body, prompt2_body, prompt3_body, prompt4_body,common_suffix, 
+                         input_dictionary={}, lora_dict=None, dict_bus=None):
+        
+        # dict_bus에서 입력 사전 가져오기
+        if dict_bus is not None:
+            dict_mb, _, _, _, _, _, _ = dict_bus
+            input_dictionary = input_dictionary or dict_mb
+
+        # 입력 사전과 lora_dict의 키워드 결합
+        combined_dict = dict(input_dictionary or {})
+        if lora_dict and "lora_keywards" in lora_dict:
+            combined_dict.update(lora_dict["lora_keywards"])
+
+        # 공통 접두사와 접미사에 사전 키 대체 적용
+        common_prefix_replaced = LoraPresetHelper.replace_dict_keys(common_prefix, combined_dict)
+        common_suffix_replaced = LoraPresetHelper.replace_dict_keys(common_suffix, combined_dict)
+        
+        # 각 프롬프트 본문에 사전 키 대체 적용
+        prompt1_body_replaced = LoraPresetHelper.replace_dict_keys(prompt1_body, combined_dict)
+        prompt2_body_replaced = LoraPresetHelper.replace_dict_keys(prompt2_body, combined_dict)
+        prompt3_body_replaced = LoraPresetHelper.replace_dict_keys(prompt3_body, combined_dict)
+        prompt4_body_replaced = LoraPresetHelper.replace_dict_keys(prompt4_body, combined_dict)
+
+        # 최종 프롬프트 생성 및 정리
+        prompt1 = LoraPresetHelper.clean_prompt(f"{common_prefix_replaced}, {prompt1_body_replaced}, {common_suffix_replaced}")
+        prompt2 = LoraPresetHelper.clean_prompt(f"{common_prefix_replaced}, {prompt2_body_replaced}, {common_suffix_replaced}")
+        prompt3 = LoraPresetHelper.clean_prompt(f"{common_prefix_replaced}, {prompt3_body_replaced}, {common_suffix_replaced}")
+        prompt4 = LoraPresetHelper.clean_prompt(f"{common_prefix_replaced}, {prompt4_body_replaced}, {common_suffix_replaced}")
+
+        return (prompt1, prompt2, prompt3, prompt4)

@@ -82,3 +82,46 @@ class DictBusEdit:
 
         new_bus = (new_dict, new_model, new_clip, new_vae, new_image, new_latent, new_list)
         return (new_bus,)
+
+
+class DictBusUpdateFirstDict:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "dict_bus": ("DICT_BUS",),
+            },
+            "optional": {
+                "dict1": ("DICT",),
+                "dict2": ("DICT",),
+                "dict3": ("DICT",),
+                "dict4": ("DICT",),
+                "dict5": ("DICT",),
+            }
+        }
+
+    RETURN_TYPES = ("DICT_BUS",)
+    FUNCTION = "update_first_dict"
+    CATEGORY = "dictionary/bus"
+
+    def update_first_dict(self, dict_bus, dict1=None, dict2=None, dict3=None, dict4=None, dict5=None):
+        orig_dict, orig_model, orig_clip, orig_vae, orig_image, orig_latent, orig_list = dict_bus
+        
+        # Find the first available dictionary from the optional inputs
+        update_dict = None
+        for d in [dict1, dict2, dict3, dict4, dict5]:
+            if d is not None:
+                update_dict = d
+                break
+                
+        # If no dictionary was provided, return the original bus
+        if update_dict is None:
+            return (dict_bus,)
+            
+        # Update the dictionary in the bus
+        if isinstance(orig_dict, dict):
+            orig_dict.update(update_dict)
+        
+        # Return the updated bus
+        new_bus = (orig_dict, orig_model, orig_clip, orig_vae, orig_image, orig_latent, orig_list)
+        return (new_bus,)
